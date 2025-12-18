@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function Hero() {
     return (
-        <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+        <section className="min-h-screen flex items-center justify-center relative overflow-hidden py-32 md:py-40">
             {/* Background - 아파트 평면도 그래픽 (매우 연하게) */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                 <svg className="w-full h-full" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -29,7 +29,7 @@ export default function Hero() {
                     className="text-center md:text-left"
                 >
                     {/* Main Headline */}
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.15] tracking-tight mb-10 md:mb-12">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.2] tracking-tight mb-8 md:mb-10">
                         <span className="block">왜 같은 84㎡인데</span>
                         <span className="block mt-3 md:mt-4">
                             견적은 <span className="inline-block border-b-4 md:border-b-[5px] border-black pb-1">3천만원</span>부터
