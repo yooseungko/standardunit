@@ -1,6 +1,7 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Hero from "@/components/sections/Hero";
+import EventBanner from "@/components/sections/EventBanner";
 import Problem from "@/components/sections/Problem";
 import Solution from "@/components/sections/Solution";
 import ValueProps from "@/components/sections/ValueProps";
@@ -21,6 +22,9 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <Hero />
+
+        {/* 12월 이벤트 배너 */}
+        <EventBanner />
 
         {/* Problem Section */}
         <Problem />
