@@ -39,6 +39,16 @@
   }
 }
 
+@keyframes scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
 /* ===== BASE LAYER (Tailwind 방식) ===== */
 @layer base {
   html {
@@ -135,6 +145,11 @@
   /* Font Sans (SUIT) */
   .font-sans {
     font-family: "SUIT Variable", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Scroll Up Animation */
+  .animate-scroll-up {
+    animation: scroll-up 15s linear infinite;
   }
 }
 

@@ -12,6 +12,7 @@ import GeekDifficulty from "@/components/sections/geek/Difficulty";
 import GeekTicker from "@/components/sections/geek/Ticker";
 import Calculator from "@/components/ui/Calculator";
 import ScopeSection from "@/components/sections/ScopeSection";
+import EstimateShare from "@/components/sections/EstimateShare";
 import PartnerMatch from "@/components/sections/PartnerMatch";
 import FinalCTA from "@/components/sections/FinalCTA";
 
@@ -46,6 +47,9 @@ export default function Home() {
 
         {/* Scope Section - 견적 포함 범위 */}
         <ScopeSection />
+
+        {/* 견적서 공유 할인 - 투명성 캠페인 */}
+        <EstimateShare />
 
         {/* Partner Matching Section */}
         <PartnerMatch />

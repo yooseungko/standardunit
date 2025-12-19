@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function EventBanner() {
+    const [mounted, setMounted] = useState(false);
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 0,
@@ -12,9 +13,10 @@ export default function EventBanner() {
     });
 
     useEffect(() => {
-        const targetDate = new Date("2025-01-31T23:59:59");
+        setMounted(true);
+        const targetDate = new Date("2026-01-31T23:59:59");
 
-        const timer = setInterval(() => {
+        const calculateTimeLeft = () => {
             const now = new Date();
             const difference = targetDate.getTime() - now.getTime();
 
@@ -26,7 +28,13 @@ export default function EventBanner() {
                     seconds: Math.floor((difference / 1000) % 60),
                 });
             }
-        }, 1000);
+        };
+
+        // 즉시 계산
+        calculateTimeLeft();
+
+        // 1초마다 업데이트
+        const timer = setInterval(calculateTimeLeft, 1000);
 
         return () => clearInterval(timer);
     }, []);
