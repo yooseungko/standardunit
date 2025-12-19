@@ -32,6 +32,12 @@ export async function sendAdminNotification(estimate: {
     wants_construction: boolean;
     created_at: string;
 }): Promise<{ success: boolean; error?: string }> {
+    console.log('sendAdminNotification called');
+    console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
+    console.log('resend client exists:', !!resend);
+    console.log('EMAIL_FROM:', EMAIL_FROM);
+    console.log('ADMIN_EMAIL:', ADMIN_EMAIL);
+
     if (!resend) {
         console.log('Resend not configured, skipping admin notification');
         return { success: false, error: 'Email not configured' };
@@ -40,6 +46,8 @@ export async function sendAdminNotification(estimate: {
     const sizeLabel = sizeLabels[estimate.size] || `${estimate.size}평`;
     const date = new Date(estimate.created_at);
     const formattedDate = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+    console.log('Sending email to:', ADMIN_EMAIL);
 
     try {
         const { error } = await resend.emails.send({

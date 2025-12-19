@@ -57,18 +57,25 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            // 관리자에게 알림 이메일 발송 (비동기, 실패해도 견적 저장은 성공)
+            // 관리자에게 알림 이메일 발송
             const savedEstimate = data[0];
-            sendAdminNotification({
-                complex_name: savedEstimate.complex_name,
-                size: savedEstimate.size,
-                floor_type: savedEstimate.floor_type,
-                name: savedEstimate.name,
-                phone: savedEstimate.phone,
-                email: savedEstimate.email,
-                wants_construction: savedEstimate.wants_construction,
-                created_at: savedEstimate.created_at,
-            }).catch(err => console.error('Failed to send admin notification:', err));
+            console.log('Attempting to send admin notification for:', savedEstimate.complex_name);
+
+            try {
+                const emailResult = await sendAdminNotification({
+                    complex_name: savedEstimate.complex_name,
+                    size: savedEstimate.size,
+                    floor_type: savedEstimate.floor_type,
+                    name: savedEstimate.name,
+                    phone: savedEstimate.phone,
+                    email: savedEstimate.email,
+                    wants_construction: savedEstimate.wants_construction ?? false,
+                    created_at: savedEstimate.created_at || new Date().toISOString(),
+                });
+                console.log('Admin notification result:', emailResult);
+            } catch (emailError) {
+                console.error('Failed to send admin notification:', emailError);
+            }
 
             return NextResponse.json(
                 { success: true, data: savedEstimate },
