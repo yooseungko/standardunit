@@ -10,6 +10,154 @@ export const isEmailConfigured = !!resend;
 // 이메일 발신자 설정 (Resend 도메인 인증 후 변경 필요)
 export const EMAIL_FROM = process.env.EMAIL_FROM || 'Standard Unit <onboarding@resend.dev>';
 
+// 관리자 알림 이메일 주소
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'standardunit25@gmail.com';
+
+// 평형 라벨
+const sizeLabels: Record<string, string> = {
+    '24': '24평 (59㎡)',
+    '32': '32평 (84㎡)',
+    '43': '43평 (110㎡)',
+    '52': '52평 (132㎡)',
+};
+
+// 관리자에게 신규 견적 요청 알림 이메일 발송
+export async function sendAdminNotification(estimate: {
+    complex_name: string;
+    size: string;
+    floor_type?: string | null;
+    name: string;
+    phone: string;
+    email?: string | null;
+    wants_construction: boolean;
+    created_at: string;
+}): Promise<{ success: boolean; error?: string }> {
+    if (!resend) {
+        console.log('Resend not configured, skipping admin notification');
+        return { success: false, error: 'Email not configured' };
+    }
+
+    const sizeLabel = sizeLabels[estimate.size] || `${estimate.size}평`;
+    const date = new Date(estimate.created_at);
+    const formattedDate = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+    try {
+        const { error } = await resend.emails.send({
+            from: EMAIL_FROM,
+            to: ADMIN_EMAIL,
+            subject: `[Standard Unit] 새로운 견적 문의 - ${estimate.complex_name} ${sizeLabel}`,
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #ffffff; padding: 40px 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: #111111; border-radius: 16px; overflow: hidden; border: 1px solid #222; }
+        .header { background: linear-gradient(135deg, #1a1a1a, #0d0d0d); padding: 32px; text-align: center; border-bottom: 1px solid #222; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; color: #ffffff; }
+        .header p { margin: 8px 0 0; color: #888; font-size: 14px; }
+        .badge { display: inline-block; background: #22c55e; color: #000; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 16px; }
+        .content { padding: 32px; }
+        .section { margin-bottom: 24px; }
+        .section-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .info-box { background: #1a1a1a; border-radius: 12px; padding: 20px; border: 1px solid #333; }
+        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #888; font-size: 14px; }
+        .info-value { color: #fff; font-weight: 500; font-size: 14px; }
+        .info-value.highlight { color: #3b82f6; }
+        .info-value.phone { font-family: monospace; color: #22c55e; }
+        .wants-construction { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 16px 20px; border-radius: 12px; text-align: center; margin-top: 20px; }
+        .wants-construction span { font-weight: 700; }
+        .footer { background: #0d0d0d; padding: 24px; text-align: center; border-top: 1px solid #222; }
+        .footer a { display: inline-block; background: #fff; color: #000; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+        .footer p { margin: 16px 0 0; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Standard Unit</h1>
+            <p>새로운 견적 문의가 접수되었습니다</p>
+            <span class="badge">🔔 신규 문의</span>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <div class="section-title">아파트 정보</div>
+                <div class="info-box">
+                    <div class="info-row">
+                        <span class="info-label">단지명</span>
+                        <span class="info-value">${estimate.complex_name}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">평형</span>
+                        <span class="info-value">${sizeLabel}</span>
+                    </div>
+                    ${estimate.floor_type ? `
+                    <div class="info-row">
+                        <span class="info-label">평면 타입</span>
+                        <span class="info-value">${estimate.floor_type}</span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">고객 정보</div>
+                <div class="info-box">
+                    <div class="info-row">
+                        <span class="info-label">성함</span>
+                        <span class="info-value">${estimate.name}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">연락처</span>
+                        <span class="info-value phone">${estimate.phone}</span>
+                    </div>
+                    ${estimate.email ? `
+                    <div class="info-row">
+                        <span class="info-label">이메일</span>
+                        <span class="info-value highlight">${estimate.email}</span>
+                    </div>
+                    ` : ''}
+                    <div class="info-row">
+                        <span class="info-label">접수 시각</span>
+                        <span class="info-value">${formattedDate}</span>
+                    </div>
+                </div>
+            </div>
+            
+            ${estimate.wants_construction ? `
+            <div class="wants-construction">
+                🏗️ <span>시공까지 희망</span>하는 고객입니다
+            </div>
+            ` : ''}
+        </div>
+        
+        <div class="footer">
+            <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://standardunit.co.kr'}/admin">관리자 페이지에서 확인하기</a>
+            <p>이 이메일은 Standard Unit 시스템에서 자동 발송되었습니다.</p>
+        </div>
+    </div>
+</body>
+</html>
+            `,
+        });
+
+        if (error) {
+            console.error('Admin notification email error:', error);
+            return { success: false, error: error.message };
+        }
+
+        console.log('Admin notification email sent successfully');
+        return { success: true };
+    } catch (error) {
+        console.error('Admin notification email error:', error);
+        return { success: false, error: String(error) };
+    }
+}
+
 // 공정별 비용 데이터 (평형별, 등급별)
 export interface WorkItemCost {
     name: string;

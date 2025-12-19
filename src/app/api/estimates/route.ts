@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured, EstimateRequest, LOCAL_STORAGE_KEY } from '@/lib/supabase';
+import { sendAdminNotification } from '@/lib/email';
 
 // 로컬 저장소 (Supabase 없을 때 메모리에 저장)
 let localEstimates: EstimateRequest[] = [];
@@ -56,14 +57,39 @@ export async function POST(request: NextRequest) {
                 );
             }
 
+            // 관리자에게 알림 이메일 발송 (비동기, 실패해도 견적 저장은 성공)
+            const savedEstimate = data[0];
+            sendAdminNotification({
+                complex_name: savedEstimate.complex_name,
+                size: savedEstimate.size,
+                floor_type: savedEstimate.floor_type,
+                name: savedEstimate.name,
+                phone: savedEstimate.phone,
+                email: savedEstimate.email,
+                wants_construction: savedEstimate.wants_construction,
+                created_at: savedEstimate.created_at,
+            }).catch(err => console.error('Failed to send admin notification:', err));
+
             return NextResponse.json(
-                { success: true, data: data[0] },
+                { success: true, data: savedEstimate },
                 { status: 201 }
             );
         }
 
         // Supabase 없을 때 - 로컬 메모리에 저장
         localEstimates.unshift(newEstimate);
+
+        // 관리자에게 알림 이메일 발송 (비동기, 실패해도 견적 저장은 성공)
+        sendAdminNotification({
+            complex_name: newEstimate.complex_name,
+            size: newEstimate.size,
+            floor_type: newEstimate.floor_type,
+            name: newEstimate.name,
+            phone: newEstimate.phone,
+            email: newEstimate.email,
+            wants_construction: newEstimate.wants_construction ?? false,
+            created_at: newEstimate.created_at ?? new Date().toISOString(),
+        }).catch(err => console.error('Failed to send admin notification:', err));
 
         return NextResponse.json(
             { success: true, data: newEstimate },
