@@ -74,7 +74,7 @@ export default function FinalCTA() {
                             빠른 상담을 원하시면 카카오톡으로 문의해주세요.
                         </p>
                         <a
-                            href="https://pf.kakao.com/_standardunit"
+                            href="https://open.kakao.com/o/sLPdwe7h"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-3 mt-8 px-8 py-4 bg-[#FEE500] text-[#000000] font-bold text-lg rounded-lg hover:bg-[#FDD835] transition-colors"
