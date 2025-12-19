@@ -10,8 +10,8 @@ export const isEmailConfigured = !!resend;
 // 이메일 발신자 설정 (Resend 도메인 인증 후 변경 필요)
 export const EMAIL_FROM = process.env.EMAIL_FROM || 'Standard Unit <onboarding@resend.dev>';
 
-// 관리자 알림 이메일 주소
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'standardunit25@gmail.com';
+// 관리자 알림 이메일 주소 (Resend 무료 계정에서는 계정 이메일만 사용 가능)
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'yooseungko@gmail.com';
 
 // 평형 라벨
 const sizeLabels: Record<string, string> = {
