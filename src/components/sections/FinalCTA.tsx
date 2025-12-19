@@ -71,11 +71,19 @@ export default function FinalCTA() {
                         <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
                             담당자가 24시간 내에 연락드리겠습니다.
                             <br />
-                            빠른 상담을 원하시면 전화 문의 주세요.
+                            빠른 상담을 원하시면 카카오톡으로 문의해주세요.
                         </p>
-                        <p className="mt-8 font-mono text-xl font-bold">
-                            1588-0000
-                        </p>
+                        <a
+                            href="https://pf.kakao.com/_standardunit"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-3 mt-8 px-8 py-4 bg-[#FEE500] text-[#000000] font-bold text-lg rounded-lg hover:bg-[#FDD835] transition-colors"
+                        >
+                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.82 5.31 4.54 6.72l-.92 3.42c-.08.3.25.55.52.4l4.04-2.34c.59.08 1.19.12 1.82.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
+                            </svg>
+                            카카오톡 상담하기
+                        </a>
                     </motion.div>
                 </div>
             </section>
