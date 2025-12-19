@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import EstimateAnalysis from "@/components/admin/EstimateAnalysis";
+
+// 탭 타입
+type AdminTab = 'requests' | 'analysis';
 
 interface EstimateRequest {
     id: number;
@@ -18,10 +22,10 @@ interface EstimateRequest {
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-    pending: { label: '대기 중', color: 'bg-yellow-100 text-yellow-800' },
-    contacted: { label: '연락 완료', color: 'bg-blue-100 text-blue-800' },
-    completed: { label: '완료', color: 'bg-green-100 text-green-800' },
-    cancelled: { label: '취소', color: 'bg-gray-100 text-gray-600' },
+    pending: { label: '대기 중', color: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' },
+    contacted: { label: '연락 완료', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
+    completed: { label: '완료', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
+    cancelled: { label: '취소', color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' },
 };
 
 const sizeLabels: Record<string, string> = {
@@ -47,6 +51,9 @@ export default function AdminPage() {
     const [updating, setUpdating] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
     const [sendingEmail, setSendingEmail] = useState(false);
+
+    // 탭 상태
+    const [activeTab, setActiveTab] = useState<AdminTab>('requests');
 
     // 견적 이메일 발송
     const handleSendEstimate = async (estimate: EstimateRequest) => {
@@ -228,8 +235,8 @@ export default function AdminPage() {
     // 인증 확인 중
     if (isAuthenticated === null) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin h-8 w-8 border-4 border-black border-t-transparent rounded-full" />
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+                <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -237,7 +244,7 @@ export default function AdminPage() {
     // 로그인 페이지
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center p-4">
                 <div className="w-full max-w-sm">
                     <div className="text-center mb-8">
                         <Link href="/" className="text-2xl font-black text-white">
@@ -246,17 +253,17 @@ export default function AdminPage() {
                         <p className="text-gray-500 font-mono text-sm mt-2">ADMIN</p>
                     </div>
 
-                    <form onSubmit={handleLogin} className="bg-white p-8">
-                        <h1 className="text-xl font-bold mb-6">관리자 로그인</h1>
+                    <form onSubmit={handleLogin} className="bg-white/5 backdrop-blur-xl border border-gray-800 p-8 rounded-lg shadow-2xl">
+                        <h1 className="text-xl font-bold mb-6 text-white">관리자 로그인</h1>
 
                         {authError && (
-                            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm">
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg">
                                 {authError}
                             </div>
                         )}
 
                         <div className="mb-6">
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-2">
                                 비밀번호
                             </label>
                             <input
@@ -264,7 +271,7 @@ export default function AdminPage() {
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-black transition-colors"
+                                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors placeholder-gray-500"
                                 placeholder="관리자 비밀번호"
                                 required
                             />
@@ -273,9 +280,9 @@ export default function AdminPage() {
                         <button
                             type="submit"
                             disabled={authLoading}
-                            className={`w-full py-3 font-bold transition-colors ${authLoading
-                                ? 'bg-gray-400 text-white cursor-not-allowed'
-                                : 'bg-black text-white hover:bg-gray-800'
+                            className={`w-full py-3 font-bold rounded-lg transition-all ${authLoading
+                                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                : 'bg-white text-gray-900 hover:bg-gray-200'
                                 }`}
                         >
                             {authLoading ? '로그인 중...' : '로그인'}
@@ -295,10 +302,10 @@ export default function AdminPage() {
     // 로딩 중
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-black border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-gray-600">데이터를 불러오는 중...</p>
+                    <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4" />
+                    <p className="text-gray-400">데이터를 불러오는 중...</p>
                 </div>
             </div>
         );
@@ -307,12 +314,12 @@ export default function AdminPage() {
     // 에러 상태
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-red-600 mb-4">{error}</p>
+                    <p className="text-red-400 mb-4">{error}</p>
                     <button
                         onClick={fetchEstimates}
-                        className="px-4 py-2 bg-black text-white hover:bg-gray-800"
+                        className="px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-200 transition-colors"
                     >
                         다시 시도
                     </button>
@@ -323,27 +330,27 @@ export default function AdminPage() {
 
     // 관리자 대시보드
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-950">
             {/* Header */}
-            <header className="bg-black text-white py-4">
+            <header className="bg-white/5 backdrop-blur-xl border-b border-white/10 py-4">
                 <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                        <Link href="/" className="text-xl font-black">
+                        <Link href="/" className="text-xl font-black text-white">
                             Standard Unit
                         </Link>
-                        <span className="text-gray-400">|</span>
-                        <span className="text-sm font-mono tracking-wider">ADMIN</span>
+                        <span className="text-gray-600">|</span>
+                        <span className="text-sm font-mono tracking-wider text-gray-400">ADMIN</span>
                     </div>
                     <div className="flex items-center gap-4">
                         <button
                             onClick={fetchEstimates}
-                            className="text-sm font-mono hover:text-gray-300 transition-colors"
+                            className="text-sm font-mono text-gray-400 hover:text-white transition-colors"
                         >
                             새로고침
                         </button>
                         <button
                             onClick={handleLogout}
-                            className="text-sm text-gray-400 hover:text-white transition-colors"
+                            className="text-sm text-gray-500 hover:text-white transition-colors"
                         >
                             로그아웃
                         </button>
@@ -351,15 +358,41 @@ export default function AdminPage() {
                 </div>
             </header>
 
+            {/* Tab Navigation */}
+            <div className="bg-white/5 backdrop-blur-xl border-b border-white/10">
+                <div className="max-w-7xl mx-auto px-6">
+                    <nav className="flex gap-8">
+                        <button
+                            onClick={() => setActiveTab('requests')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'requests'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            견적 요청
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('analysis')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'analysis'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            📊 견적 분석
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
             <main className="max-w-7xl mx-auto px-6 py-8">
                 {/* Demo Mode Banner */}
                 {isDemoMode && (
-                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800">
+                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                         <div className="flex items-start gap-3">
                             <span className="text-xl">⚠️</span>
                             <div>
-                                <p className="font-semibold">데모 모드</p>
-                                <p className="text-sm mt-1">
+                                <p className="font-semibold text-yellow-400">데모 모드</p>
+                                <p className="text-sm mt-1 text-yellow-400/80">
                                     Supabase가 설정되지 않았습니다. 데이터는 서버 메모리에 임시 저장됩니다.
                                 </p>
                             </div>
@@ -367,252 +400,261 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-white p-6 border border-gray-200">
-                        <p className="font-mono text-3xl font-black">{estimates.length}</p>
-                        <p className="text-sm text-gray-500 mt-1">전체 요청</p>
-                    </div>
-                    <div className="bg-white p-6 border border-gray-200">
-                        <p className="font-mono text-3xl font-black text-yellow-600">
-                            {estimates.filter(e => e.status === 'pending').length}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">대기 중</p>
-                    </div>
-                    <div className="bg-white p-6 border border-gray-200">
-                        <p className="font-mono text-3xl font-black text-blue-600">
-                            {estimates.filter(e => e.status === 'contacted').length}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">연락 완료</p>
-                    </div>
-                    <div className="bg-white p-6 border border-gray-200">
-                        <p className="font-mono text-3xl font-black text-green-600">
-                            {estimates.filter(e => e.status === 'completed').length}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">완료</p>
-                    </div>
-                </div>
+                {/* Tab Content */}
+                {activeTab === 'analysis' ? (
+                    <EstimateAnalysis isDemoMode={isDemoMode} />
+                ) : (
+                    <>
+                        {/* Stats (기존 견적 요청 탭) */}
 
-                {/* Table */}
-                <div className="bg-white border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">접수일시</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">단지명</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">평형</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">고객명</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">연락처</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">상태</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">작업</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {estimates.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                                            아직 견적 요청이 없습니다.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    estimates.map((estimate) => (
-                                        <tr
-                                            key={estimate.id}
-                                            className="hover:bg-gray-50 transition-colors cursor-pointer"
-                                            onClick={() => setSelectedEstimate(estimate)}
-                                        >
-                                            <td className="px-6 py-4 text-sm font-mono text-gray-600">
-                                                {formatDate(estimate.created_at)}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-medium">{estimate.complex_name}</td>
-                                            <td className="px-6 py-4 text-sm">{sizeLabels[estimate.size] || estimate.size}</td>
-                                            <td className="px-6 py-4 text-sm font-medium">{estimate.name}</td>
-                                            <td className="px-6 py-4 text-sm font-mono">{estimate.phone}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${statusLabels[estimate.status]?.color}`}>
-                                                    {statusLabels[estimate.status]?.label}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setSelectedEstimate(estimate);
-                                                    }}
-                                                    className="text-sm text-black hover:underline"
-                                                >
-                                                    상세보기
-                                                </button>
-                                            </td>
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                                <p className="font-mono text-3xl font-black text-white">{estimates.length}</p>
+                                <p className="text-sm text-gray-500 mt-1">전체 요청</p>
+                            </div>
+                            <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                                <p className="font-mono text-3xl font-black text-yellow-400">
+                                    {estimates.filter(e => e.status === 'pending').length}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">대기 중</p>
+                            </div>
+                            <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                                <p className="font-mono text-3xl font-black text-blue-400">
+                                    {estimates.filter(e => e.status === 'contacted').length}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">연락 완료</p>
+                            </div>
+                            <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                                <p className="font-mono text-3xl font-black text-emerald-400">
+                                    {estimates.filter(e => e.status === 'completed').length}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">완료</p>
+                            </div>
+                        </div>
+
+                        {/* Table */}
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-white/5 border-b border-white/10">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">접수일시</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">단지명</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">평형</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">고객명</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">연락처</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">상태</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">작업</th>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
-
-            {/* Detail Modal */}
-            {selectedEstimate && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-                            <h2 className="text-xl font-bold">견적 요청 상세</h2>
-                            <button
-                                onClick={() => setSelectedEstimate(null)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-6">
-                            {/* 아파트 정보 */}
-                            <div>
-                                <h3 className="text-sm font-mono text-gray-400 mb-3 uppercase">아파트 정보</h3>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">단지명</span>
-                                        <span className="font-medium">{selectedEstimate.complex_name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">평형</span>
-                                        <span className="font-medium">{sizeLabels[selectedEstimate.size] || selectedEstimate.size}</span>
-                                    </div>
-                                    {selectedEstimate.floor_type && (
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">평면 타입</span>
-                                            <span className="font-medium">{selectedEstimate.floor_type}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* 고객 정보 */}
-                            <div>
-                                <h3 className="text-sm font-mono text-gray-400 mb-3 uppercase">고객 정보</h3>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">성함</span>
-                                        <span className="font-medium">{selectedEstimate.name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">연락처</span>
-                                        <a href={`tel:${selectedEstimate.phone}`} className="font-mono font-medium hover:underline">
-                                            {selectedEstimate.phone}
-                                        </a>
-                                    </div>
-                                    {selectedEstimate.email && (
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">이메일</span>
-                                            <a href={`mailto:${selectedEstimate.email}`} className="font-medium hover:underline">
-                                                {selectedEstimate.email}
-                                            </a>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* 접수 정보 */}
-                            <div>
-                                <h3 className="text-sm font-mono text-gray-400 mb-3 uppercase">접수 정보</h3>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">접수일시</span>
-                                        <span className="font-mono text-sm">{formatDate(selectedEstimate.created_at)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-500">상태</span>
-                                        <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${statusLabels[selectedEstimate.status]?.color}`}>
-                                            {statusLabels[selectedEstimate.status]?.label}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-500">시공 의뢰</span>
-                                        {selectedEstimate.wants_construction ? (
-                                            <span className="inline-block px-3 py-1 text-xs font-bold bg-black text-white rounded-full">
-                                                희망
-                                            </span>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/10">
+                                        {estimates.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                                    아직 견적 요청이 없습니다.
+                                                </td>
+                                            </tr>
                                         ) : (
-                                            <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
-                                                견적만
-                                            </span>
+                                            estimates.map((estimate) => (
+                                                <tr
+                                                    key={estimate.id}
+                                                    className="hover:bg-white/5 transition-colors cursor-pointer"
+                                                    onClick={() => setSelectedEstimate(estimate)}
+                                                >
+                                                    <td className="px-6 py-4 text-sm font-mono text-gray-400">
+                                                        {formatDate(estimate.created_at)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm font-medium text-white">{estimate.complex_name}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-300">{sizeLabels[estimate.size] || estimate.size}</td>
+                                                    <td className="px-6 py-4 text-sm font-medium text-white">{estimate.name}</td>
+                                                    <td className="px-6 py-4 text-sm font-mono text-gray-400">{estimate.phone}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${statusLabels[estimate.status]?.color}`}>
+                                                            {statusLabels[estimate.status]?.label}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedEstimate(estimate);
+                                                            }}
+                                                            className="text-sm text-gray-400 hover:text-white transition-colors hover:underline"
+                                                        >
+                                                            상세보기
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
                                         )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Detail Modal */}
+                        {selectedEstimate && (
+                            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                                <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                                    <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                                        <h2 className="text-xl font-bold text-white">견적 요청 상세</h2>
+                                        <button
+                                            onClick={() => setSelectedEstimate(null)}
+                                            className="text-gray-500 hover:text-white transition-colors"
+                                        >
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-6 space-y-6">
+                                        {/* 아파트 정보 */}
+                                        <div>
+                                            <h3 className="text-sm font-mono text-gray-500 mb-3 uppercase">아파트 정보</h3>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-500">단지명</span>
+                                                    <span className="font-medium text-white">{selectedEstimate.complex_name}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-500">평형</span>
+                                                    <span className="font-medium text-white">{sizeLabels[selectedEstimate.size] || selectedEstimate.size}</span>
+                                                </div>
+                                                {selectedEstimate.floor_type && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-500">평면 타입</span>
+                                                        <span className="font-medium text-white">{selectedEstimate.floor_type}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* 고객 정보 */}
+                                        <div>
+                                            <h3 className="text-sm font-mono text-gray-500 mb-3 uppercase">고객 정보</h3>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-500">성함</span>
+                                                    <span className="font-medium text-white">{selectedEstimate.name}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-500">연락처</span>
+                                                    <a href={`tel:${selectedEstimate.phone}`} className="font-mono font-medium text-blue-400 hover:underline">
+                                                        {selectedEstimate.phone}
+                                                    </a>
+                                                </div>
+                                                {selectedEstimate.email && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-500">이메일</span>
+                                                        <a href={`mailto:${selectedEstimate.email}`} className="font-medium text-blue-400 hover:underline">
+                                                            {selectedEstimate.email}
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* 접수 정보 */}
+                                        <div>
+                                            <h3 className="text-sm font-mono text-gray-500 mb-3 uppercase">접수 정보</h3>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-500">접수일시</span>
+                                                    <span className="font-mono text-sm text-gray-300">{formatDate(selectedEstimate.created_at)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500">상태</span>
+                                                    <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${statusLabels[selectedEstimate.status]?.color}`}>
+                                                        {statusLabels[selectedEstimate.status]?.label}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500">시공 의뢰</span>
+                                                    {selectedEstimate.wants_construction ? (
+                                                        <span className="inline-block px-3 py-1 text-xs font-bold bg-white text-gray-900 rounded-full">
+                                                            희망
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-700 text-gray-400 rounded-full">
+                                                            견적만
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 상태 변경 */}
+                                        <div>
+                                            <h3 className="text-sm font-mono text-gray-500 mb-3 uppercase">상태 변경</h3>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {Object.entries(statusLabels).map(([key, { label }]) => (
+                                                    <button
+                                                        key={key}
+                                                        disabled={updating || selectedEstimate.status === key}
+                                                        onClick={() => handleStatusChange(selectedEstimate.id, key)}
+                                                        className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${selectedEstimate.status === key
+                                                            ? 'bg-white text-gray-900 border-white'
+                                                            : 'bg-transparent text-gray-300 border-white/20 hover:border-white hover:text-white'
+                                                            }`}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 border-t border-white/10">
+                                        {/* 견적 발송 버튼 */}
+                                        {selectedEstimate.email && (
+                                            <button
+                                                onClick={() => handleSendEstimate(selectedEstimate)}
+                                                disabled={sendingEmail}
+                                                className={`w-full mb-4 py-3 font-bold rounded-lg flex items-center justify-center gap-2 transition-colors ${sendingEmail
+                                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-blue-600 text-white hover:bg-blue-500'
+                                                    }`}
+                                            >
+                                                {sendingEmail ? (
+                                                    <>
+                                                        <span className="animate-spin">⏳</span>
+                                                        발송 중...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        📧 견적서 이메일 발송
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                        {!selectedEstimate.email && (
+                                            <div className="mb-4 p-3 bg-white/5 text-gray-500 text-sm text-center rounded-lg border border-white/10">
+                                                이메일 주소가 없어 견적서를 발송할 수 없습니다.
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between">
+                                            <button
+                                                onClick={() => handleDelete(selectedEstimate.id)}
+                                                className="px-4 py-2 text-red-400 hover:text-red-300 text-sm transition-colors"
+                                            >
+                                                삭제
+                                            </button>
+                                            <button
+                                                onClick={() => setSelectedEstimate(null)}
+                                                className="px-6 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-200 transition-colors"
+                                            >
+                                                닫기
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* 상태 변경 */}
-                            <div>
-                                <h3 className="text-sm font-mono text-gray-400 mb-3 uppercase">상태 변경</h3>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {Object.entries(statusLabels).map(([key, { label }]) => (
-                                        <button
-                                            key={key}
-                                            disabled={updating || selectedEstimate.status === key}
-                                            onClick={() => handleStatusChange(selectedEstimate.id, key)}
-                                            className={`px-4 py-2 text-sm font-medium border transition-colors ${selectedEstimate.status === key
-                                                ? 'bg-black text-white border-black'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                                                }`}
-                                        >
-                                            {label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-6 border-t border-gray-200">
-                            {/* 견적 발송 버튼 */}
-                            {selectedEstimate.email && (
-                                <button
-                                    onClick={() => handleSendEstimate(selectedEstimate)}
-                                    disabled={sendingEmail}
-                                    className={`w-full mb-4 py-3 font-bold flex items-center justify-center gap-2 transition-colors ${sendingEmail
-                                        ? 'bg-gray-400 text-white cursor-not-allowed'
-                                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                                        }`}
-                                >
-                                    {sendingEmail ? (
-                                        <>
-                                            <span className="animate-spin">⏳</span>
-                                            발송 중...
-                                        </>
-                                    ) : (
-                                        <>
-                                            📧 견적서 이메일 발송
-                                        </>
-                                    )}
-                                </button>
-                            )}
-                            {!selectedEstimate.email && (
-                                <div className="mb-4 p-3 bg-gray-100 text-gray-500 text-sm text-center">
-                                    이메일 주소가 없어 견적서를 발송할 수 없습니다.
-                                </div>
-                            )}
-                            <div className="flex justify-between">
-                                <button
-                                    onClick={() => handleDelete(selectedEstimate.id)}
-                                    className="px-4 py-2 text-red-600 hover:text-red-700 text-sm"
-                                >
-                                    삭제
-                                </button>
-                                <button
-                                    onClick={() => setSelectedEstimate(null)}
-                                    className="px-6 py-2 bg-black text-white hover:bg-gray-800"
-                                >
-                                    닫기
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                        )}
+                    </>
+                )}
+            </main>
+        </div >
     );
 }
