@@ -18,10 +18,10 @@ export default function Footer() {
                     {/* Links */}
                     <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-8 md:gap-10 text-sm md:text-base font-mono">
                         <a
-                            href="mailto:contact@standardunit.kr"
+                            href="mailto:standardunit25@gmail.com"
                             className="text-gray-400 hover:text-white transition-colors duration-200"
                         >
-                            contact@standardunit.kr
+                            standardunit25@gmail.com
                         </a>
                         <Link
                             href="#"
