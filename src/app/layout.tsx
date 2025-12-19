@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: "Standard Unit | 아파트 인테리어 무료 견적 비교",
     template: "%s | Standard Unit",
   },
-  description: "아파트 인테리어 견적, 합리적인 가격에 투명하게. 3,847건의 실시공 데이터 기반 표준 견적 시스템. 32평 기준 평균 4,200만원, 무료 견적 상담 후 검증된 파트너사 시공 매칭까지.",
+  description: "대한민국 인테리어 견적의 표준, 스탠다드 유닛",
   keywords: [
     "아파트 인테리어",
     "인테리어 견적",
