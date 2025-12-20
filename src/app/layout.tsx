@@ -12,8 +12,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://standardunit.kr'),
   title: {
-    default: "Standard Unit | 아파트 인테리어 무료 견적 비교",
-    template: "%s | Standard Unit",
+    default: "스탠다드 유닛 | 인테리어 표준 견적",
+    template: "%s | 스탠다드 유닛",
   },
   description: "대한민국 인테리어 견적의 표준, 스탠다드 유닛",
   keywords: [
