@@ -3,9 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import EstimateAnalysis from "@/components/admin/EstimateAnalysis";
+import PricingManagement from "@/components/admin/PricingManagement";
+import MarketPricingManagement from "@/components/admin/MarketPricingManagement";
+import QuoteGenerationProcess from "@/components/admin/QuoteGenerationProcess";
+import QuoteManagement from "@/components/admin/QuoteManagement";
+import PriceCrawler from "@/components/admin/PriceCrawler";
 
 // 탭 타입
-type AdminTab = 'requests' | 'analysis';
+type AdminTab = 'requests' | 'analysis' | 'pricing' | 'market-pricing' | 'quotes' | 'crawler';
 
 interface EstimateRequest {
     id: number;
@@ -51,6 +56,7 @@ export default function AdminPage() {
     const [updating, setUpdating] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
     const [sendingEmail, setSendingEmail] = useState(false);
+    const [showQuoteProcess, setShowQuoteProcess] = useState(false);
 
     // 탭 상태
     const [activeTab, setActiveTab] = useState<AdminTab>('requests');
@@ -380,6 +386,42 @@ export default function AdminPage() {
                         >
                             📊 견적 분석
                         </button>
+                        <button
+                            onClick={() => setActiveTab('pricing')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'pricing'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            📋 표준 단가 관리
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('market-pricing')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'market-pricing'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            📊 시장 단가 관리
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('quotes')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'quotes'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            📑 견적서 관리
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('crawler')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'crawler'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            🕷️ 가격 크롤링
+                        </button>
                     </nav>
                 </div>
             </div>
@@ -403,6 +445,14 @@ export default function AdminPage() {
                 {/* Tab Content */}
                 {activeTab === 'analysis' ? (
                     <EstimateAnalysis isDemoMode={isDemoMode} />
+                ) : activeTab === 'pricing' ? (
+                    <PricingManagement isDemoMode={isDemoMode} />
+                ) : activeTab === 'market-pricing' ? (
+                    <MarketPricingManagement isDemoMode={isDemoMode} />
+                ) : activeTab === 'quotes' ? (
+                    <QuoteManagement />
+                ) : activeTab === 'crawler' ? (
+                    <PriceCrawler />
                 ) : (
                     <>
                         {/* Stats (기존 견적 요청 탭) */}
@@ -609,25 +659,36 @@ export default function AdminPage() {
                                     <div className="p-6 border-t border-white/10">
                                         {/* 견적 발송 버튼 */}
                                         {selectedEstimate.email && (
-                                            <button
-                                                onClick={() => handleSendEstimate(selectedEstimate)}
-                                                disabled={sendingEmail}
-                                                className={`w-full mb-4 py-3 font-bold rounded-lg flex items-center justify-center gap-2 transition-colors ${sendingEmail
-                                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                                    : 'bg-blue-600 text-white hover:bg-blue-500'
-                                                    }`}
-                                            >
-                                                {sendingEmail ? (
-                                                    <>
-                                                        <span className="animate-spin">⏳</span>
-                                                        발송 중...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        📧 견적서 이메일 발송
-                                                    </>
-                                                )}
-                                            </button>
+                                            <div className="space-y-2 mb-4">
+                                                {/* 도면 기반 견적서 생성 버튼 */}
+                                                <button
+                                                    onClick={() => setShowQuoteProcess(true)}
+                                                    className="w-full py-3 font-bold rounded-lg flex items-center justify-center gap-2 transition-colors bg-emerald-600 text-white hover:bg-emerald-500"
+                                                >
+                                                    📐 도면 업로드 & 견적서 생성
+                                                </button>
+
+                                                {/* 기존 간단 이메일 발송 */}
+                                                <button
+                                                    onClick={() => handleSendEstimate(selectedEstimate)}
+                                                    disabled={sendingEmail}
+                                                    className={`w-full py-3 font-bold rounded-lg flex items-center justify-center gap-2 transition-colors ${sendingEmail
+                                                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-blue-600 text-white hover:bg-blue-500'
+                                                        }`}
+                                                >
+                                                    {sendingEmail ? (
+                                                        <>
+                                                            <span className="animate-spin">⏳</span>
+                                                            발송 중...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            📧 간단 견적서 이메일 발송
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                         )}
                                         {!selectedEstimate.email && (
                                             <div className="mb-4 p-3 bg-white/5 text-gray-500 text-sm text-center rounded-lg border border-white/10">
@@ -651,6 +712,21 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                             </div>
+                        )}
+
+                        {/* 견적서 생성 프로세스 모달 */}
+                        {showQuoteProcess && selectedEstimate && (
+                            <QuoteGenerationProcess
+                                estimateId={selectedEstimate.id}
+                                customerName={selectedEstimate.name}
+                                customerEmail={selectedEstimate.email || ''}
+                                propertySize={selectedEstimate.size ? parseFloat(selectedEstimate.size) * 3.3 : undefined}
+                                onClose={() => setShowQuoteProcess(false)}
+                                onComplete={() => {
+                                    setShowQuoteProcess(false);
+                                    handleStatusChange(selectedEstimate.id, 'contacted');
+                                }}
+                            />
                         )}
                     </>
                 )}
