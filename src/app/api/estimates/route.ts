@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured, EstimateRequest, LOCAL_STORAGE_KEY } fr
 import { sendAdminNotification } from '@/lib/email';
 
 // 로컬 저장소 (Supabase 없을 때 메모리에 저장)
-let localEstimates: EstimateRequest[] = [];
+const localEstimates: EstimateRequest[] = [];
 
 export async function POST(request: NextRequest) {
     try {

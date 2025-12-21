@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // 로컬 데이터 (Supabase 미연결 시)
 let localExtractedItems: Record<string, unknown>[] = [];
-let localPriceRecords: Record<string, unknown>[] = [];
+const localPriceRecords: Record<string, unknown>[] = [];
 
 // GET - 시장 단가 데이터 조회
 export async function GET() {

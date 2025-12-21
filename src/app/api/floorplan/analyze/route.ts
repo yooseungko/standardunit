@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
         }
 
         let imageUrl = image_url;
-        let floorplanId = floorplan_id;
+        const floorplanId = floorplan_id;
 
         // floorplan_id가 제공된 경우 DB에서 URL 조회
         if (floorplan_id && !image_url) {

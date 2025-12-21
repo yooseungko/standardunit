@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function EventBanner() {
-    const [mounted, setMounted] = useState(false);
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 0,
@@ -13,7 +12,6 @@ export default function EventBanner() {
     });
 
     useEffect(() => {
-        setMounted(true);
         const targetDate = new Date("2026-01-31T23:59:59");
 
         const calculateTimeLeft = () => {

@@ -47,7 +47,7 @@ export default function Hero() {
                         className="max-w-2xl mx-auto md:mx-0 space-y-5"
                     >
                         <p className="text-lg md:text-xl lg:text-2xl text-gray-500 leading-relaxed tracking-tight">
-                            불투명한 견적, 애매한 자재 등급, "현장 상황에 따라 추가"
+                            불투명한 견적, 애매한 자재 등급, &ldquo;현장 상황에 따라 추가&rdquo;
                         </p>
                         <p className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-snug tracking-tight">
                             당신의 아파트는 표준인데,<br className="hidden sm:block" /> 견적은 왜 비표준인가요?
