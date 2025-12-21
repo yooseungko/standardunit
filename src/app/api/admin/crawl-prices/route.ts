@@ -32,6 +32,7 @@ const CATEGORY_MAP: Record<number, { name: string; parent?: string }> = {
     210: { name: '설비시공', parent: '설비' },
     213: { name: '부분철거', parent: '철거' },
     59: { name: '제작가구', parent: '가구' },
+    53: { name: '시스템에어컨', parent: '에어컨' },
 };
 
 // 상위 카테고리 (하위 카테고리 가져오기용)

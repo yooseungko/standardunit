@@ -23,72 +23,122 @@ interface CrawledProduct {
     brand?: string;
 }
 
-const CATEGORIES: Category[] = [
+// 카테고리 영역 정의
+interface CategoryGroup {
+    groupName: string;
+    categories: Category[];
+}
+
+const CATEGORY_GROUPS: CategoryGroup[] = [
     {
-        id: 50, name: "욕실 제품", productCount: 49, children: [
-            { id: 126, name: "양변기/소변기", productCount: 8 },
-            { id: 137, name: "세면대/하부장", productCount: 8 },
-            { id: 148, name: "수전/샤워기", productCount: 13 },
-            { id: 163, name: "욕실장/거울", productCount: 3 },
-            { id: 178, name: "악세사리", productCount: 14 },
-            { id: 242, name: "환풍기/기타", productCount: 3 },
+        groupName: "마감재",
+        categories: [
+            {
+                id: 108, name: "벽지", productCount: 36, children: [
+                    { id: 109, name: "실크", productCount: 32 },
+                    { id: 112, name: "합지", productCount: 4 },
+                ]
+            },
+            {
+                id: 52, name: "마루", productCount: 16, children: [
+                    { id: 79, name: "강마루", productCount: 13 },
+                    { id: 84, name: "원목마루", productCount: 1 },
+                    { id: 87, name: "SPC마루", productCount: 2 },
+                ]
+            },
+            {
+                id: 88, name: "장판", productCount: 5, children: [
+                    { id: 89, name: "모노륨 장판", productCount: 5 },
+                ]
+            },
+            { id: 92, name: "데코타일", productCount: 4 },
+            {
+                id: 91, name: "타일", productCount: 7, children: [
+                    { id: 93, name: "도기질", productCount: 2 },
+                    { id: 106, name: "포세린", productCount: 5 },
+                ]
+            },
         ]
     },
     {
-        id: 108, name: "벽지", productCount: 36, children: [
-            { id: 109, name: "실크", productCount: 32 },
-            { id: 112, name: "합지", productCount: 4 },
+        groupName: "욕실",
+        categories: [
+            {
+                id: 50, name: "욕실 제품", productCount: 49, children: [
+                    { id: 126, name: "양변기/소변기", productCount: 8 },
+                    { id: 137, name: "세면대/하부장", productCount: 8 },
+                    { id: 148, name: "수전/샤워기", productCount: 13 },
+                    { id: 163, name: "욕실장/거울", productCount: 3 },
+                    { id: 178, name: "악세사리", productCount: 14 },
+                    { id: 242, name: "환풍기/기타", productCount: 3 },
+                ]
+            },
         ]
     },
     {
-        id: 52, name: "마루", productCount: 16, children: [
-            { id: 79, name: "강마루", productCount: 13 },
-            { id: 84, name: "원목마루", productCount: 1 },
-            { id: 87, name: "SPC마루", productCount: 2 },
+        groupName: "주방",
+        categories: [
+            {
+                id: 62, name: "주방제품", productCount: 7, children: [
+                    { id: 233, name: "싱크수전", productCount: 7 },
+                ]
+            },
         ]
     },
     {
-        id: 88, name: "장판", productCount: 5, children: [
-            { id: 89, name: "모노륨 장판", productCount: 5 },
-        ]
-    },
-    { id: 92, name: "데코타일", productCount: 4 },
-    { id: 54, name: "창호", productCount: 24 },
-    {
-        id: 55, name: "목자재/철물", productCount: 16, children: [
-            { id: 69, name: "목자재", productCount: 11 },
-            { id: 74, name: "단열재", productCount: 2 },
-            { id: 76, name: "철물", productCount: 3 },
-        ]
-    },
-    { id: 56, name: "도어", productCount: 6 },
-    { id: 225, name: "중문", productCount: 3 },
-    {
-        id: 209, name: "설비/철거", productCount: 9, children: [
-            { id: 210, name: "설비시공", productCount: 5 },
-            { id: 213, name: "부분철거", productCount: 4 },
+        groupName: "목공/문",
+        categories: [
+            {
+                id: 55, name: "목자재/철물", productCount: 16, children: [
+                    { id: 69, name: "목자재", productCount: 11 },
+                    { id: 74, name: "단열재", productCount: 2 },
+                    { id: 76, name: "철물", productCount: 3 },
+                ]
+            },
+            { id: 56, name: "도어", productCount: 6 },
+            { id: 225, name: "중문", productCount: 3 },
         ]
     },
     {
-        id: 91, name: "타일", productCount: 7, children: [
-            { id: 93, name: "도기질", productCount: 2 },
-            { id: 106, name: "포세린", productCount: 5 },
-        ]
-    },
-    { id: 59, name: "제작가구", productCount: 15 },
-    {
-        id: 62, name: "주방제품", productCount: 7, children: [
-            { id: 233, name: "싱크수전", productCount: 7 },
+        groupName: "창호",
+        categories: [
+            { id: 54, name: "창호", productCount: 24 },
         ]
     },
     {
-        id: 64, name: "조명/전기", productCount: 49, children: [
-            { id: 244, name: "조명", productCount: 17 },
-            { id: 246, name: "콘센트/스위치", productCount: 14 },
-            { id: 248, name: "감지기/스피커", productCount: 18 },
+        groupName: "전기/조명",
+        categories: [
+            {
+                id: 64, name: "조명/전기", productCount: 49, children: [
+                    { id: 244, name: "조명", productCount: 17 },
+                    { id: 246, name: "콘센트/스위치", productCount: 14 },
+                    { id: 248, name: "감지기/스피커", productCount: 18 },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "설비/에어컨",
+        categories: [
+            {
+                id: 209, name: "설비/철거", productCount: 9, children: [
+                    { id: 210, name: "설비시공", productCount: 5 },
+                    { id: 213, name: "부분철거", productCount: 4 },
+                ]
+            },
+            { id: 53, name: "시스템에어컨", productCount: 10 },
+        ]
+    },
+    {
+        groupName: "가구",
+        categories: [
+            { id: 59, name: "제작가구", productCount: 15 },
         ]
     },
 ];
+
+// 기존 호환성을 위한 전체 카테고리 배열
+const CATEGORIES: Category[] = CATEGORY_GROUPS.flatMap(g => g.categories);
 
 export default function PriceCrawler() {
     const [crawling, setCrawling] = useState(false);
@@ -332,38 +382,49 @@ export default function PriceCrawler() {
                             {selectedCategories.length > 0 ? "전체 해제" : "전체 선택"}
                         </button>
                     </div>
-                    <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                        {CATEGORIES.map(category => (
-                            <div key={category.id}>
-                                <label className="flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedCategories.includes(category.id)}
-                                        onChange={() => toggleCategory(category.id)}
-                                        className="rounded border-gray-600"
-                                    />
-                                    <span className="text-white flex-1">{category.name}</span>
-                                    <span className="text-gray-400 text-sm">{category.productCount}</span>
-                                </label>
-                                {category.children && (
-                                    <div className="ml-6 space-y-1">
-                                        {category.children.map(child => (
-                                            <label
-                                                key={child.id}
-                                                className="flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg cursor-pointer"
-                                            >
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                        {CATEGORY_GROUPS.map(group => (
+                            <div key={group.groupName} className="border border-white/10 rounded-lg overflow-hidden">
+                                {/* 그룹 헤더 */}
+                                <div className="bg-white/10 px-3 py-2">
+                                    <span className="text-sm font-bold text-blue-400">{group.groupName}</span>
+                                </div>
+                                {/* 그룹 내 카테고리들 */}
+                                <div className="p-2 space-y-1">
+                                    {group.categories.map(category => (
+                                        <div key={category.id}>
+                                            <label className="flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedCategories.includes(child.id)}
-                                                    onChange={() => toggleCategory(child.id)}
+                                                    checked={selectedCategories.includes(category.id)}
+                                                    onChange={() => toggleCategory(category.id)}
                                                     className="rounded border-gray-600"
                                                 />
-                                                <span className="text-gray-300 flex-1">{child.name}</span>
-                                                <span className="text-gray-500 text-sm">{child.productCount}</span>
+                                                <span className="text-white flex-1 text-sm">{category.name}</span>
+                                                <span className="text-gray-400 text-xs">{category.productCount}</span>
                                             </label>
-                                        ))}
-                                    </div>
-                                )}
+                                            {category.children && (
+                                                <div className="ml-6 space-y-1">
+                                                    {category.children.map(child => (
+                                                        <label
+                                                            key={child.id}
+                                                            className="flex items-center gap-2 p-1.5 hover:bg-white/5 rounded-lg cursor-pointer"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedCategories.includes(child.id)}
+                                                                onChange={() => toggleCategory(child.id)}
+                                                                className="rounded border-gray-600"
+                                                            />
+                                                            <span className="text-gray-300 flex-1 text-sm">{child.name}</span>
+                                                            <span className="text-gray-500 text-xs">{child.productCount}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>

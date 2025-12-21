@@ -31,6 +31,7 @@ export async function sendAdminNotification(estimate: {
     email?: string | null;
     wants_construction: boolean;
     created_at: string;
+    construction_scope?: string[];
 }): Promise<{ success: boolean; error?: string }> {
     console.log('sendAdminNotification called');
     console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
@@ -46,6 +47,29 @@ export async function sendAdminNotification(estimate: {
     const sizeLabel = sizeLabels[estimate.size] || `${estimate.size}평`;
     const date = new Date(estimate.created_at);
     const formattedDate = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+    // 시공 범위 라벨 매핑
+    const scopeLabels: Record<string, string> = {
+        extension: '확장',
+        demolition: '철거',
+        window: '샷시',
+        plumbing: '설비',
+        door: '도어교체',
+        woodwork: '목공',
+        flooring: '바닥',
+        wallpaper: '도배',
+        paint: '페인트',
+        electrical: '전기/조명',
+        kitchen: '주방',
+        bathroom: '욕실',
+        tile: '타일',
+        aircon: '시스템에어컨',
+        furniture: '가구',
+        middleDoor: '중문',
+        cleaning: '마감청소',
+    };
+
+    const scopeText = estimate.construction_scope?.map(id => scopeLabels[id] || id).join(', ') || '선택 없음';
 
     console.log('Sending email to:', ADMIN_EMAIL);
 
@@ -76,6 +100,8 @@ export async function sendAdminNotification(estimate: {
         .info-value { color: #fff; font-weight: 500; font-size: 14px; }
         .info-value.highlight { color: #3b82f6; }
         .info-value.phone { font-family: monospace; color: #22c55e; }
+        .scope-tags { margin-top: 8px; }
+        .scope-tag { display: inline-block; background: #333; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 12px; margin: 3px; white-space: nowrap; }
         .wants-construction { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 16px 20px; border-radius: 12px; text-align: center; margin-top: 20px; }
         .wants-construction span { font-weight: 700; }
         .footer { background: #0d0d0d; padding: 24px; text-align: center; border-top: 1px solid #222; }
@@ -132,6 +158,15 @@ export async function sendAdminNotification(estimate: {
                     <div class="info-row">
                         <span class="info-label">접수 시각</span>
                         <span class="info-value">${formattedDate}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">희망 시공 범위</div>
+                <div class="info-box">
+                    <div class="scope-tags">
+                        ${estimate.construction_scope?.map(id => `<span class="scope-tag">${scopeLabels[id] || id}</span>`).join(' ') || '<span style="color:#888">선택 없음</span>'}
                     </div>
                 </div>
             </div>

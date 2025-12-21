@@ -25,6 +25,7 @@ export interface EstimateRequest {
     status: 'pending' | 'contacted' | 'completed' | 'cancelled';
     created_at?: string;
     notes?: string | null;
+    construction_scope?: string[];
 }
 
 // ============================================

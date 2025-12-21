@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        const { complexName, size, floorType, name, phone, email, wantsConstruction } = body;
+        const { complexName, size, floorType, name, phone, email, wantsConstruction, constructionScope } = body;
 
         // 필수 필드 검증
         if (!complexName || !size || !name || !phone || !email) {
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
             status: 'pending',
             created_at: new Date().toISOString(),
             notes: null,
+            construction_scope: constructionScope || [],
         };
 
         // Supabase가 설정된 경우
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
                     email: email || null,
                     wants_construction: wantsConstruction || false,
                     status: 'pending',
+                    construction_scope: constructionScope || [],
                 }])
                 .select();
 
@@ -71,6 +73,7 @@ export async function POST(request: NextRequest) {
                     email: savedEstimate.email,
                     wants_construction: savedEstimate.wants_construction ?? false,
                     created_at: savedEstimate.created_at || new Date().toISOString(),
+                    construction_scope: savedEstimate.construction_scope || [],
                 });
                 console.log('Admin notification result:', emailResult);
             } catch (emailError) {
@@ -96,6 +99,7 @@ export async function POST(request: NextRequest) {
             email: newEstimate.email,
             wants_construction: newEstimate.wants_construction ?? false,
             created_at: newEstimate.created_at ?? new Date().toISOString(),
+            construction_scope: newEstimate.construction_scope || [],
         }).catch(err => console.error('Failed to send admin notification:', err));
 
         return NextResponse.json(

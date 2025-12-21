@@ -4,6 +4,32 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 
 export default function FinalCTA() {
+    // 시공 범위 옵션 정의
+    const constructionOptions = [
+        { id: 'extension', label: '확장', defaultChecked: false },
+        { id: 'demolition', label: '철거', defaultChecked: true },
+        { id: 'window', label: '샷시', defaultChecked: false },
+        { id: 'plumbing', label: '설비', defaultChecked: false },
+        { id: 'door', label: '도어교체', defaultChecked: true },
+        { id: 'woodwork', label: '목공', defaultChecked: true },
+        { id: 'flooring', label: '바닥', defaultChecked: true },
+        { id: 'wallpaper', label: '도배', defaultChecked: true },
+        { id: 'paint', label: '페인트', defaultChecked: false },
+        { id: 'electrical', label: '전기/조명', defaultChecked: true },
+        { id: 'kitchen', label: '주방', defaultChecked: true },
+        { id: 'bathroom', label: '욕실', defaultChecked: true },
+        { id: 'tile', label: '타일', defaultChecked: true },
+        { id: 'aircon', label: '시스템에어컨', defaultChecked: false },
+        { id: 'furniture', label: '가구', defaultChecked: false },
+        { id: 'middleDoor', label: '중문', defaultChecked: false },
+        { id: 'cleaning', label: '마감청소', defaultChecked: false },
+    ];
+
+    // 기본 체크된 항목들
+    const defaultCheckedItems = constructionOptions
+        .filter(opt => opt.defaultChecked)
+        .map(opt => opt.id);
+
     const [formData, setFormData] = useState({
         complexName: "",
         size: "",
@@ -12,10 +38,23 @@ export default function FinalCTA() {
         phone: "",
         email: "",
         wantsConstruction: false,
+        constructionScope: defaultCheckedItems,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // 시공 범위 체크박스 핸들러
+    const handleScopeChange = (optionId: string) => {
+        setFormData(prev => {
+            const currentScope = prev.constructionScope;
+            if (currentScope.includes(optionId)) {
+                return { ...prev, constructionScope: currentScope.filter(id => id !== optionId) };
+            } else {
+                return { ...prev, constructionScope: [...currentScope, optionId] };
+            }
+        });
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -231,6 +270,43 @@ export default function FinalCTA() {
                                     />
                                 </div>
                             </div>
+                        </div>
+
+                        {/* 시공 범위 선택 */}
+                        <div className="mb-10 pt-8 border-t border-gray-100">
+                            <h3 className="font-mono text-sm text-gray-400 mb-4 tracking-widest uppercase">
+                                시공 범위 선택
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-6">
+                                원하시는 시공 항목을 선택해주세요. (기본 항목이 미리 선택되어 있습니다)
+                            </p>
+                            <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                                {constructionOptions.map((option) => (
+                                    <label
+                                        key={option.id}
+                                        className={`flex items-center justify-center gap-1 px-2 py-2 border cursor-pointer transition-all text-xs font-medium ${formData.constructionScope.includes(option.id)
+                                                ? 'border-black bg-black text-white'
+                                                : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.constructionScope.includes(option.id)}
+                                            onChange={() => handleScopeChange(option.id)}
+                                            className="sr-only"
+                                        />
+                                        {formData.constructionScope.includes(option.id) && (
+                                            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        )}
+                                        <span>{option.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <p className="text-xs text-gray-400 mt-4">
+                                선택된 항목: {formData.constructionScope.length}개
+                            </p>
                         </div>
 
                         {/* 시공 의뢰 옵션 */}

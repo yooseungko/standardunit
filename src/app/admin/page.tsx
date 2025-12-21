@@ -24,6 +24,7 @@ interface EstimateRequest {
     status: 'pending' | 'contacted' | 'completed' | 'cancelled';
     created_at: string;
     notes: string | null;
+    construction_scope?: string[];
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -339,7 +340,7 @@ export default function AdminPage() {
         <div className="min-h-screen bg-gray-950">
             {/* Header */}
             <header className="bg-white/5 backdrop-blur-xl border-b border-white/10 py-4">
-                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+                <div className="max-w-[1480px] mx-auto px-6 flex items-center justify-between">
                     <div className="flex items-center gap-6">
                         <Link href="/" className="text-xl font-black text-white">
                             Standard Unit
@@ -366,7 +367,7 @@ export default function AdminPage() {
 
             {/* Tab Navigation */}
             <div className="bg-white/5 backdrop-blur-xl border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-6">
+                <div className="max-w-[1480px] mx-auto px-6">
                     <nav className="flex gap-8">
                         <button
                             onClick={() => setActiveTab('requests')}
@@ -426,7 +427,7 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-6 py-8">
+            <main className="max-w-[1480px] mx-auto px-6 py-8">
                 {/* Demo Mode Banner */}
                 {isDemoMode && (
                     <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
@@ -634,6 +635,41 @@ export default function AdminPage() {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* 희망 시공 범위 */}
+                                        {selectedEstimate.construction_scope && selectedEstimate.construction_scope.length > 0 && (
+                                            <div>
+                                                <h3 className="text-sm font-mono text-gray-500 mb-3 uppercase">희망 시공 범위</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(() => {
+                                                        const scopeLabels: Record<string, string> = {
+                                                            extension: '확장',
+                                                            demolition: '철거',
+                                                            window: '샷시',
+                                                            plumbing: '설비',
+                                                            door: '도어교체',
+                                                            woodwork: '목공',
+                                                            flooring: '바닥',
+                                                            wallpaper: '도배',
+                                                            paint: '페인트',
+                                                            electrical: '전기/조명',
+                                                            kitchen: '주방',
+                                                            bathroom: '욕실',
+                                                            tile: '타일',
+                                                            aircon: '시스템에어컨',
+                                                            furniture: '가구',
+                                                            middleDoor: '중문',
+                                                            cleaning: '마감청소',
+                                                        };
+                                                        return selectedEstimate.construction_scope.map((id: string) => (
+                                                            <span key={id} className="px-2 py-1 text-xs font-medium bg-gray-800 text-gray-300 rounded">
+                                                                {scopeLabels[id] || id}
+                                                            </span>
+                                                        ));
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* 상태 변경 */}
                                         <div>
