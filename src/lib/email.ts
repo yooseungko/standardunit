@@ -32,6 +32,7 @@ export async function sendAdminNotification(estimate: {
     wants_construction: boolean;
     created_at: string;
     construction_scope?: string[];
+    notes?: string | null;
 }): Promise<{ success: boolean; error?: string }> {
     console.log('sendAdminNotification called');
     console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
@@ -170,6 +171,15 @@ export async function sendAdminNotification(estimate: {
                     </div>
                 </div>
             </div>
+
+            ${estimate.notes ? `
+            <div class="section">
+                <div class="section-title">고객 요청사항</div>
+                <div class="info-box">
+                    <p style="color:#fff; margin:0; white-space:pre-wrap; line-height:1.6;">${estimate.notes}</p>
+                </div>
+            </div>
+            ` : ''}
             
             ${estimate.wants_construction ? `
             <div class="wants-construction">

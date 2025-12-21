@@ -39,6 +39,7 @@ export default function FinalCTA() {
         email: "",
         wantsConstruction: false,
         constructionScope: defaultCheckedItems,
+        additionalNotes: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -56,7 +57,7 @@ export default function FinalCTA() {
         });
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -285,8 +286,8 @@ export default function FinalCTA() {
                                     <label
                                         key={option.id}
                                         className={`flex items-center justify-center gap-1 px-2 py-2 border cursor-pointer transition-all text-xs font-medium ${formData.constructionScope.includes(option.id)
-                                                ? 'border-black bg-black text-white'
-                                                : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
+                                            ? 'border-black bg-black text-white'
+                                            : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
                                             }`}
                                     >
                                         <input
@@ -335,6 +336,25 @@ export default function FinalCTA() {
                                     </p>
                                 </div>
                             </label>
+                        </div>
+
+                        {/* 요청 사항 */}
+                        <div className="mb-10 pt-8 border-t border-gray-100">
+                            <h3 className="font-mono text-sm text-gray-400 mb-4 tracking-widest uppercase">
+                                요청 사항 (선택)
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                                추가적인 요청사항이나 질문이 있으시면 자유롭게 작성해주세요.
+                            </p>
+                            <textarea
+                                id="additionalNotes"
+                                name="additionalNotes"
+                                rows={4}
+                                placeholder="예: 입주 예정일, 특별히 신경 쓰는 부분, 참고하고 싶은 스타일 등"
+                                value={formData.additionalNotes}
+                                onChange={handleChange}
+                                className="w-full px-4 py-4 border border-gray-300 text-base focus:outline-none focus:border-black transition-colors resize-none"
+                            />
                         </div>
 
                         {/* Submit Button */}

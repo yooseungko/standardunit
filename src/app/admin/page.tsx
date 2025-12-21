@@ -671,6 +671,18 @@ export default function AdminPage() {
                                             </div>
                                         )}
 
+                                        {/* 고객 요청 사항 */}
+                                        {selectedEstimate.notes && (
+                                            <div>
+                                                <h3 className="text-sm font-mono text-gray-500 mb-3 uppercase">고객 요청 사항</h3>
+                                                <div className="p-4 bg-white/5 border border-white/10 rounded-lg">
+                                                    <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
+                                                        {selectedEstimate.notes}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* 상태 변경 */}
                                         <div>
                                             <h3 className="text-sm font-mono text-gray-500 mb-3 uppercase">상태 변경</h3>

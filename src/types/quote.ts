@@ -49,6 +49,8 @@ export interface FloorplanAnalysisResult {
         bathroomFaucet: number; // 욕실 수전
         kitchenFaucet: number; // 주방 수전
         showerSet: number; // 샤워기 세트
+        bathroomMirror?: number; // 욕실장(거울)
+        bathroomAccessory?: number; // 욕실 악세사리 세트
         lights: {
             living: number;
             bedroom: number;
@@ -57,11 +59,45 @@ export interface FloorplanAnalysisResult {
             hallway: number;
             balcony: number;
         };
+        // 전기 설비: 매입등
+        recessed_lights?: {
+            living: number; // 거실 매입등
+            bedroom: number; // 침실 매입등 (총합)
+            hallway: number; // 현관/복도 매입등
+        };
+        // 전기 설비: 콘센트
+        outlets?: {
+            living: number; // 거실 콘센트
+            bedroom: number; // 침실 콘센트 (총합)
+            hallway: number; // 현관/복도 콘센트
+        };
+        // 전기 설비: 스위치
+        switches?: {
+            total: number; // 스위치 총 개수
+        };
         doors: {
             room: number; // 방문
             entrance: number; // 현관문
         };
         windows: number;
+    };
+
+    // 주방 정보 (상세)
+    kitchen?: {
+        width?: number; // 주방 가로 (m)
+        sinkFaucet: number; // 싱크수전 (필수)
+        sinkBowl: number; // 싱크볼 (필수)
+        induction: number; // 인덕션 (필수)
+        upperCabinet?: number; // 상부장 길이 (m)
+        lowerCabinet?: number; // 하부장 길이 (m)
+    };
+
+    // 타일 시공 면적
+    tileAreas?: {
+        bathroom: number; // 욕실 타일 면적 (㎡)
+        entrance: number; // 현관 타일 면적 (㎡)
+        balcony: number; // 베란다 타일 면적 (㎡)
+        kitchenWall: number; // 주방 벽 타일 면적 (㎡)
     };
 
     // 공정별 예상 자재
@@ -79,6 +115,7 @@ export interface FloorplanAnalysisResult {
     rawOcrText?: string; // OCR 원본 텍스트
     analysisNotes?: string; // 분석 참고사항
 }
+
 
 // 도면 테이블
 export interface Floorplan {

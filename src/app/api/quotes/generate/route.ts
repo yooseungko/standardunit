@@ -13,6 +13,125 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// ====== 견적 생성 규칙 헬퍼 함수들 ======
+
+/**
+ * 면적(㎡)을 평형대로 변환
+ * @param sqm 면적 (㎡)
+ * @returns 평형대 카테고리 ('30평대' | '40평대' | '50평대' | '60평대 이상')
+ */
+function getSizeCategory(sqm: number): '30평대' | '40평대' | '50평대' | '60평대 이상' {
+    const pyeong = sqm / 3.3058;
+    if (pyeong < 35) return '30평대';
+    if (pyeong < 45) return '40평대';
+    if (pyeong < 55) return '50평대';
+    return '60평대 이상';
+}
+
+/**
+ * 타일공 인원/일수 계산 (규칙 3)
+ * - 30평대: 3명 x 3일
+ * - 40평대: 4명 x 3일
+ * - 50평대: 5명 x 3일
+ */
+function calculateTileWorkers(sqm: number): { workers: number; days: number; totalManDays: number } {
+    const category = getSizeCategory(sqm);
+    let workers: number;
+    switch (category) {
+        case '30평대': workers = 3; break;
+        case '40평대': workers = 4; break;
+        case '50평대': workers = 5; break;
+        default: workers = 6; // 60평대 이상
+    }
+    return { workers, days: 3, totalManDays: workers * 3 };
+}
+
+/**
+ * 주방 공사 기간 및 가구공 계산 (규칙 6)
+ * - 30평대: 2일
+ * - 40평대: 3일
+ * - 50평대: 4일
+ */
+function calculateKitchenWorkDays(sqm: number): number {
+    const category = getSizeCategory(sqm);
+    switch (category) {
+        case '30평대': return 2;
+        case '40평대': return 3;
+        case '50평대': return 4;
+        default: return 5; // 60평대 이상
+    }
+}
+
+/**
+ * 전기 설비 계산 (규칙 4)
+ * 매입등: 방 하나에 6-8개 (평형대별), 거실 10-15개
+ * 콘센트: 방 하나에 3개
+ * 스위치: 각 실별 1개
+ */
+function calculateElectricalFixtures(
+    analysisResult: FloorplanAnalysisResult | null | undefined,
+    sqm: number
+): { recessedLights: number; outlets: number; switches: number } {
+    const category = getSizeCategory(sqm);
+    const rooms = analysisResult?.rooms || [];
+
+    // 방당 매입등 개수
+    let lightsPerRoom: number;
+    switch (category) {
+        case '30평대': lightsPerRoom = 6; break;
+        case '40평대': lightsPerRoom = 7; break;
+        case '50평대': lightsPerRoom = 8; break;
+        default: lightsPerRoom = 9;
+    }
+
+    // 거실 매입등
+    let livingLights: number;
+    switch (category) {
+        case '30평대': livingLights = 10; break;
+        case '40평대': livingLights = 12; break;
+        case '50평대': livingLights = 15; break;
+        default: livingLights = 18;
+    }
+
+    // 방 개수 계산
+    const bedroomCount = rooms.filter(r => r.type === 'bedroom').length || 3;
+    const bathroomCount = rooms.filter(r => r.type === 'bathroom').length || 2;
+    const totalRooms = rooms.length || 8; // 전체 실 개수 (스위치용)
+
+    // 매입등 총합
+    const recessedLights = (bedroomCount * lightsPerRoom) + livingLights + 3 + (bathroomCount * 2); // 현관 3개, 욕실 2개씩
+
+    // 콘센트: 방 당 3개, 거실 5개, 현관 2개
+    const outlets = (bedroomCount * 3) + 5 + 2;
+
+    // 스위치: 각 실별 1개
+    const switches = totalRooms;
+
+    return { recessedLights, outlets, switches };
+}
+
+/**
+ * 설비공 필요 여부 확인 (규칙 2)
+ * 욕실 2칸 이상이면 설비공 1명 필수
+ */
+function needsPlumber(analysisResult: FloorplanAnalysisResult | null | undefined): boolean {
+    const bathroomCount = analysisResult?.fixtures?.toilet ||
+        analysisResult?.rooms?.filter(r => r.type === 'bathroom').length || 0;
+    return bathroomCount >= 2;
+}
+
+/**
+ * 복합비용 사용 허용 카테고리 확인 (규칙 1)
+ * - 가구: 복합비용 사용 허락
+ * - 기타/가설비: 복합비용 사용 허락
+ * - 철거: 복합비용 사용 허락
+ */
+function isCompositeCostAllowed(category: string): boolean {
+    const allowedCategories = ['가구', '기타', '가설비', '철거', '주방', '욕실'];
+    return allowedCategories.some(c => category.includes(c));
+}
+
+
 // 견적서 생성
 export async function POST(request: NextRequest) {
     try {
@@ -222,9 +341,11 @@ function generateCalculationComment(
     // 기본 정보
     const pyeong = estimate.size ? parseFloat(estimate.size) : 0;
     const sqm = Math.round(pyeong * 3.3058);
+    const sizeCategory = getSizeCategory(sqm);
 
     comments.push(`## 📐 면적 정보`);
     comments.push(`- **공급면적**: ${pyeong}평 (약 ${sqm}㎡)`);
+    comments.push(`- **평형대 분류**: ${sizeCategory}`);
 
     if (analysis) {
         const floorArea = analysis.calculations?.floorArea || sqm;
@@ -261,7 +382,7 @@ function generateCalculationComment(
 
         // fixtures 정보
         if (analysis.fixtures) {
-            const { toilet, sink, bathroomFaucet, kitchenFaucet, doors, lights } = analysis.fixtures;
+            const { toilet, sink, bathroomFaucet, kitchenFaucet, doors, lights, recessed_lights, outlets, switches } = analysis.fixtures;
             comments.push(`\n## 🔧 설비 수량`);
             if (toilet) comments.push(`- 양변기: ${toilet}개`);
             if (sink) comments.push(`- 세면기: ${sink}개`);
@@ -274,6 +395,36 @@ function generateCalculationComment(
                     (lights.hallway || 0) + (lights.balcony || 0);
                 if (totalLights > 0) comments.push(`- 조명: ${totalLights}개소`);
             }
+
+            // 전기 설비 상세 (규칙 4)
+            if (recessed_lights) {
+                const totalRecessed = (recessed_lights.living || 0) + (recessed_lights.bedroom || 0) + (recessed_lights.hallway || 0);
+                if (totalRecessed > 0) comments.push(`- 매입등: ${totalRecessed}개`);
+            }
+            if (outlets) {
+                const totalOutlets = (outlets.living || 0) + (outlets.bedroom || 0) + (outlets.hallway || 0);
+                if (totalOutlets > 0) comments.push(`- 콘센트: ${totalOutlets}개`);
+            }
+            if (switches?.total) comments.push(`- 스위치: ${switches.total}개`);
+        }
+
+        // 주방 정보 (규칙 5, 6)
+        if (analysis.kitchen) {
+            comments.push(`\n## 🍳 주방 정보`);
+            if (analysis.kitchen.upperCabinet) comments.push(`- 상부장: ${analysis.kitchen.upperCabinet}M`);
+            if (analysis.kitchen.lowerCabinet) comments.push(`- 하부장: ${analysis.kitchen.lowerCabinet}M`);
+            comments.push(`- 싱크수전: 필수 항목`);
+            comments.push(`- 싱크볼: 필수 항목`);
+            comments.push(`- 인덕션: 필수 항목`);
+        }
+
+        // 타일 면적 (규칙 3)
+        if (analysis.tileAreas) {
+            comments.push(`\n## 🧱 타일 시공 면적`);
+            if (analysis.tileAreas.bathroom) comments.push(`- 욕실: ${analysis.tileAreas.bathroom}㎡`);
+            if (analysis.tileAreas.entrance) comments.push(`- 현관: ${analysis.tileAreas.entrance}㎡`);
+            if (analysis.tileAreas.balcony) comments.push(`- 베란다: ${analysis.tileAreas.balcony}㎡`);
+            if (analysis.tileAreas.kitchenWall) comments.push(`- 주방벽: ${analysis.tileAreas.kitchenWall}㎡`);
         }
     }
 
@@ -304,13 +455,45 @@ function generateCalculationComment(
         comments.push(`- **도배**: 벽+천장 면적 기준 ${wallpaperItem.quantity}${wallpaperItem.unit}`);
     }
 
+    // 타일 (규칙 3)
+    const tileItem = items.find(i => i.category?.includes('타일') && i.item_name?.includes('인건비'));
+    if (tileItem) {
+        comments.push(`- **타일 시공**: ${tileItem.description}`);
+    }
+
+    // 전기 (규칙 4)
+    const electricItem = items.find(i => i.category?.includes('전기') && i.item_name?.includes('인건비'));
+    if (electricItem) {
+        comments.push(`- **전기 공사**: ${electricItem.description}`);
+    }
+
+    // 주방 (규칙 5, 6)
+    const kitchenFurnitureItem = items.find(i => i.item_name?.includes('가구공') && i.item_name?.includes('주방'));
+    if (kitchenFurnitureItem) {
+        comments.push(`- **주방 공사**: ${kitchenFurnitureItem.description}`);
+    }
+
     // 욕실
     const bathroomItems = items.filter(i => i.category?.includes('욕실'));
     if (bathroomItems.length > 0) {
         const bathroomCount = items.find(i => i.item_name?.includes('욕실') && i.item_name?.includes('공사'))?.quantity ||
             analysis?.rooms?.filter(r => r.type === 'bathroom').length || 2;
         comments.push(`- **욕실 공사**: ${bathroomCount}개소 기준`);
+
+        // 설비공 필요 여부 (규칙 2)
+        const plumberItem = items.find(i => i.item_name?.includes('설비공'));
+        if (plumberItem) {
+            comments.push(`- **설비공**: 욕실 2개소 이상 (악세사리, 변기, 욕실장 설치)`);
+        }
     }
+
+    comments.push(`\n## ⚙️ 적용된 계산 규칙`);
+    comments.push(`1. 복합비용: 가구, 기타/가설비, 철거, 주방, 욕실에서 사용`);
+    comments.push(`2. 설비공: 욕실 2칸 이상 시 1명 필수`);
+    comments.push(`3. 타일공: ${sizeCategory} 기준 인원/일수 적용`);
+    comments.push(`4. 전기: 평형대별 매입등/콘센트/스위치 개수 계산`);
+    comments.push(`5. 주방: 싱크수전, 싱크볼, 인덕션 필수`);
+    comments.push(`6. 주방 가구공: 평형대별 공사기간 적용`);
 
     comments.push(`\n---`);
     comments.push(`*이 견적서는 도면 분석 결과를 바탕으로 자동 생성되었습니다.*`);
@@ -499,16 +682,33 @@ function generateQuoteItems(
         });
     }
 
-    // 5. 타일 공사 (화장실, 주방)
+    // 5. 타일 공사 (욕실, 현관, 베란다, 주방벽) - 규칙 3 적용
+    // 타일 면적 계산: 욕실(바닥+벽), 현관, 베란다, 주방벽
+    const tileAreas = analysisResult?.tileAreas;
+    let totalTileArea: number;
+    if (tileAreas) {
+        totalTileArea = (tileAreas.bathroom || 0) + (tileAreas.entrance || 0) +
+            (tileAreas.balcony || 0) + (tileAreas.kitchenWall || 0);
+    } else {
+        // 기본 추정: 욕실 면적 × 5 (바닥+벽) + 현관 5㎡ + 베란다 10㎡ + 주방벽 5㎡
+        const bathroomArea = analysisResult?.rooms?.filter(r => r.type === 'bathroom')
+            .reduce((sum, r) => sum + r.area, 0) || (floorArea * 0.08);
+        const entranceArea = analysisResult?.rooms?.filter(r => r.type === 'hallway')
+            .reduce((sum, r) => sum + r.area, 0) || 5;
+        const balconyArea = analysisResult?.rooms?.filter(r => r.type === 'balcony')
+            .reduce((sum, r) => sum + r.area, 0) || 10;
+        totalTileArea = (bathroomArea * 5) + entranceArea + balconyArea + 5; // 주방벽 5㎡
+    }
+
     const tileMaterial = standardPricing.material.find(m =>
         m.category === '타일' || m.product_name.includes('타일')
     );
     if (tileMaterial) {
-        const tileArea = Math.ceil(floorArea * 0.15 * 5); // 화장실/주방 15% x 5 (바닥+벽)
+        const tileArea = Math.ceil(totalTileArea * 1.1); // 10% 로스 포함
         items.push({
             category: QUOTE_CATEGORIES.TILE,
             item_name: tileMaterial.product_name,
-            description: `화장실/주방 바닥 및 벽면`,
+            description: `욕실/현관/베란다/주방벽 타일 (로스 10% 포함)`,
             quantity: tileArea,
             unit: tileMaterial.unit,
             unit_price: tileMaterial.unit_price,
@@ -521,20 +721,21 @@ function generateQuoteItems(
         });
     }
 
-    // 타일 인건비
+    // 타일 인건비 - 규칙 3: 평형대별 타일공 인원/일수 계산
     const tileLabor = standardPricing.labor.find(l =>
         l.labor_type.includes('타일')
     );
     if (tileLabor) {
-        const days = Math.ceil(floorArea * 0.15 * 5 / 10); // 하루 10㎡
+        const tileWorkCalc = calculateTileWorkers(floorArea);
+        const sizeCategory = getSizeCategory(floorArea);
         items.push({
             category: QUOTE_CATEGORIES.TILE,
             item_name: `${tileLabor.labor_type} 인건비`,
-            description: `${days}일 작업`,
-            quantity: days,
-            unit: '일',
+            description: `${sizeCategory} 기준: ${tileWorkCalc.workers}명 × ${tileWorkCalc.days}일`,
+            quantity: tileWorkCalc.totalManDays, // 연인원 (명×일)
+            unit: '인일',
             unit_price: tileLabor.daily_rate,
-            total_price: Math.round(days * tileLabor.daily_rate),
+            total_price: Math.round(tileWorkCalc.totalManDays * tileLabor.daily_rate),
             cost_type: 'labor',
             labor_ratio: 1,
             sort_order: sortOrder++,
@@ -543,28 +744,107 @@ function generateQuoteItems(
         });
     }
 
-    // 6. 전기 공사
-    const electricCost = standardPricing.composite.find(c =>
-        c.category === '전기' || c.cost_name.includes('전기')
+    // 6. 전기 공사 - 규칙 4 적용: 매입등, 콘센트, 스위치 개별 항목화
+    const electricalCalc = calculateElectricalFixtures(analysisResult, floorArea);
+    const sizeCategory = getSizeCategory(floorArea);
+
+    // 6-1. 매입등
+    const recessedLightMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('매입등') || m.product_name.includes('LED') ||
+        (m.category === '전기' && m.sub_category?.includes('조명'))
     );
-    if (electricCost) {
+    if (recessedLightMaterial) {
         items.push({
             category: QUOTE_CATEGORIES.ELECTRICAL,
-            item_name: electricCost.cost_name,
-            description: electricCost.description,
-            quantity: 1,
-            unit: electricCost.unit || '식',
-            unit_price: Math.round(floorArea * electricCost.unit_price),
-            total_price: Math.round(floorArea * electricCost.unit_price),
-            cost_type: 'composite',
-            labor_ratio: electricCost.labor_ratio || 0.5,
+            sub_category: '조명',
+            item_name: recessedLightMaterial.product_name,
+            description: `${sizeCategory} 기준: 방 6-8개, 거실 10-15개, 현관 3개`,
+            quantity: electricalCalc.recessedLights,
+            unit: recessedLightMaterial.unit || '개',
+            unit_price: recessedLightMaterial.unit_price,
+            total_price: Math.round(electricalCalc.recessedLights * recessedLightMaterial.unit_price),
+            cost_type: 'material',
+            labor_ratio: 0,
             sort_order: sortOrder++,
-            reference_type: 'composite',
-            reference_id: electricCost.id,
+            reference_type: 'material',
+            reference_id: recessedLightMaterial.id,
         });
     }
 
-    // 7. 설비 공사
+    // 6-2. 콘센트
+    const outletMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('콘센트') ||
+        (m.category === '전기' && m.sub_category?.includes('콘센트'))
+    );
+    if (outletMaterial) {
+        items.push({
+            category: QUOTE_CATEGORIES.ELECTRICAL,
+            sub_category: '콘센트',
+            item_name: outletMaterial.product_name,
+            description: `방당 3개, 거실 5개, 현관 2개`,
+            quantity: electricalCalc.outlets,
+            unit: outletMaterial.unit || '개',
+            unit_price: outletMaterial.unit_price,
+            total_price: Math.round(electricalCalc.outlets * outletMaterial.unit_price),
+            cost_type: 'material',
+            labor_ratio: 0,
+            sort_order: sortOrder++,
+            reference_type: 'material',
+            reference_id: outletMaterial.id,
+        });
+    }
+
+    // 6-3. 스위치
+    const switchMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('스위치') ||
+        (m.category === '전기' && m.sub_category?.includes('스위치'))
+    );
+    if (switchMaterial) {
+        items.push({
+            category: QUOTE_CATEGORIES.ELECTRICAL,
+            sub_category: '스위치',
+            item_name: switchMaterial.product_name,
+            description: `각 실별 1개씩`,
+            quantity: electricalCalc.switches,
+            unit: switchMaterial.unit || '개',
+            unit_price: switchMaterial.unit_price,
+            total_price: Math.round(electricalCalc.switches * switchMaterial.unit_price),
+            cost_type: 'material',
+            labor_ratio: 0,
+            sort_order: sortOrder++,
+            reference_type: 'material',
+            reference_id: switchMaterial.id,
+        });
+    }
+
+    // 6-4. 전기 공사 인건비 (설치)
+    const electricLabor = standardPricing.labor.find(l =>
+        l.labor_type.includes('전기')
+    );
+    if (electricLabor) {
+        const totalElectricItems = electricalCalc.recessedLights + electricalCalc.outlets + electricalCalc.switches;
+        const days = Math.ceil(totalElectricItems / 30); // 하루 30개 작업 기준
+        items.push({
+            category: QUOTE_CATEGORIES.ELECTRICAL,
+            item_name: `${electricLabor.labor_type} 인건비`,
+            description: `매입등 ${electricalCalc.recessedLights}개, 콘센트 ${electricalCalc.outlets}개, 스위치 ${electricalCalc.switches}개 설치`,
+            quantity: days,
+            unit: '일',
+            unit_price: electricLabor.daily_rate,
+            total_price: Math.round(days * electricLabor.daily_rate),
+            cost_type: 'labor',
+            labor_ratio: 1,
+            sort_order: sortOrder++,
+            reference_type: 'labor',
+            reference_id: electricLabor.id,
+        });
+    }
+
+    // 7. 설비 공사 - 규칙 2 적용: 욕실 2칸 이상 시 설비공 필수
+    const bathroomCount = analysisResult?.fixtures?.toilet ||
+        analysisResult?.rooms?.filter(r => r.type === 'bathroom').length || 2;
+    const requiresPlumber = needsPlumber(analysisResult);
+
     const plumbingCost = standardPricing.composite.find(c =>
         c.category === '설비' || c.cost_name.includes('설비') || c.cost_name.includes('배관')
     );
@@ -583,6 +863,29 @@ function generateQuoteItems(
             reference_type: 'composite',
             reference_id: plumbingCost.id,
         });
+    }
+
+    // 규칙 2: 욕실 2칸 이상 시 설비공 1명 필수 (악세사리, 변기, 욕실장 설치용)
+    if (requiresPlumber) {
+        const plumberLabor = standardPricing.labor.find(l =>
+            l.labor_type.includes('설비') || l.labor_type.includes('배관')
+        );
+        if (plumberLabor) {
+            items.push({
+                category: QUOTE_CATEGORIES.PLUMBING,
+                item_name: '설비공 인건비 (욕실 설치)',
+                description: `욕실 ${bathroomCount}개소: 악세사리, 변기, 욕실장(거울) 설치`,
+                quantity: 1,
+                unit: '명',
+                unit_price: plumberLabor.daily_rate,
+                total_price: plumberLabor.daily_rate,
+                cost_type: 'labor',
+                labor_ratio: 1,
+                sort_order: sortOrder++,
+                reference_type: 'labor',
+                reference_id: plumberLabor.id,
+            });
+        }
     }
 
     // 8. 목공 공사
@@ -632,15 +935,164 @@ function generateQuoteItems(
         });
     }
 
-    // 11. 주방 공사
+    // 11. 주방 공사 - 규칙 5, 6 적용
+    // 규칙 5: 싱크수전, 싱크볼, 인덕션 필수
+    // 규칙 6: 주방 사이즈에 따라 상하부장 M 단위 계산, 평형대별 공사기간, 가구공 필수
+
+    const kitchenInfo = analysisResult?.kitchen;
+    const kitchenWorkDays = calculateKitchenWorkDays(floorArea);
+    const kitchenSizeCategory = getSizeCategory(floorArea);
+
+    // 주방 상하부장 길이 계산 (도면 분석 결과 또는 기본값)
+    const upperCabinetLength = kitchenInfo?.upperCabinet || (floorArea / 3.3 >= 40 ? 4 : 3); // 40평 이상 4m, 미만 3m
+    const lowerCabinetLength = kitchenInfo?.lowerCabinet || (floorArea / 3.3 >= 40 ? 4.5 : 3.5); // 40평 이상 4.5m, 미만 3.5m
+
+    // 11-1. 주방 상부장 (M 단위)
+    const upperCabinetMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('상부장') ||
+        (m.category === '주방' && m.sub_category?.includes('상부장'))
+    );
+    if (upperCabinetMaterial) {
+        items.push({
+            category: QUOTE_CATEGORIES.KITCHEN,
+            sub_category: '가구',
+            item_name: upperCabinetMaterial.product_name,
+            description: `주방 상부장 ${upperCabinetLength}M`,
+            quantity: upperCabinetLength,
+            unit: 'M',
+            unit_price: upperCabinetMaterial.unit_price,
+            total_price: Math.round(upperCabinetLength * upperCabinetMaterial.unit_price),
+            cost_type: 'material',
+            labor_ratio: 0,
+            sort_order: sortOrder++,
+            reference_type: 'material',
+            reference_id: upperCabinetMaterial.id,
+        });
+    }
+
+    // 11-2. 주방 하부장 (M 단위)
+    const lowerCabinetMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('하부장') ||
+        (m.category === '주방' && m.sub_category?.includes('하부장'))
+    );
+    if (lowerCabinetMaterial) {
+        items.push({
+            category: QUOTE_CATEGORIES.KITCHEN,
+            sub_category: '가구',
+            item_name: lowerCabinetMaterial.product_name,
+            description: `주방 하부장 ${lowerCabinetLength}M`,
+            quantity: lowerCabinetLength,
+            unit: 'M',
+            unit_price: lowerCabinetMaterial.unit_price,
+            total_price: Math.round(lowerCabinetLength * lowerCabinetMaterial.unit_price),
+            cost_type: 'material',
+            labor_ratio: 0,
+            sort_order: sortOrder++,
+            reference_type: 'material',
+            reference_id: lowerCabinetMaterial.id,
+        });
+    }
+
+    // 11-3. 싱크수전 (필수 - 규칙 5)
+    const sinkFaucetMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('싱크수전') || m.product_name.includes('주방수전') ||
+        (m.category === '주방' && m.sub_category?.includes('수전'))
+    );
+    if (sinkFaucetMaterial) {
+        items.push({
+            category: QUOTE_CATEGORIES.KITCHEN,
+            sub_category: '수전',
+            item_name: sinkFaucetMaterial.product_name,
+            description: '주방 필수 항목',
+            quantity: 1,
+            unit: sinkFaucetMaterial.unit || '개',
+            unit_price: sinkFaucetMaterial.unit_price,
+            total_price: sinkFaucetMaterial.unit_price,
+            cost_type: 'material',
+            labor_ratio: 0,
+            sort_order: sortOrder++,
+            reference_type: 'material',
+            reference_id: sinkFaucetMaterial.id,
+        });
+    }
+
+    // 11-4. 싱크볼 (필수 - 규칙 5)
+    const sinkBowlMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('싱크볼') || m.product_name.includes('싱크대 볼') ||
+        (m.category === '주방' && m.sub_category?.includes('싱크'))
+    );
+    if (sinkBowlMaterial) {
+        items.push({
+            category: QUOTE_CATEGORIES.KITCHEN,
+            sub_category: '싱크',
+            item_name: sinkBowlMaterial.product_name,
+            description: '주방 필수 항목',
+            quantity: 1,
+            unit: sinkBowlMaterial.unit || '개',
+            unit_price: sinkBowlMaterial.unit_price,
+            total_price: sinkBowlMaterial.unit_price,
+            cost_type: 'material',
+            labor_ratio: 0,
+            sort_order: sortOrder++,
+            reference_type: 'material',
+            reference_id: sinkBowlMaterial.id,
+        });
+    }
+
+    // 11-5. 인덕션 (필수 - 규칙 5)
+    const inductionMaterial = standardPricing.material.find(m =>
+        m.product_name.includes('인덕션') ||
+        (m.category === '주방' && m.sub_category?.includes('가전'))
+    );
+    if (inductionMaterial) {
+        items.push({
+            category: QUOTE_CATEGORIES.KITCHEN,
+            sub_category: '가전',
+            item_name: inductionMaterial.product_name,
+            description: '주방 필수 항목',
+            quantity: 1,
+            unit: inductionMaterial.unit || '개',
+            unit_price: inductionMaterial.unit_price,
+            total_price: inductionMaterial.unit_price,
+            cost_type: 'material',
+            labor_ratio: 0,
+            sort_order: sortOrder++,
+            reference_type: 'material',
+            reference_id: inductionMaterial.id,
+        });
+    }
+
+    // 11-6. 주방 가구공 인건비 (규칙 6: 평형대별 공사기간)
+    const furnitureLabor = standardPricing.labor.find(l =>
+        l.labor_type.includes('가구') || l.labor_type.includes('목공')
+    );
+    if (furnitureLabor) {
+        items.push({
+            category: QUOTE_CATEGORIES.KITCHEN,
+            item_name: '가구공 인건비 (주방 설치)',
+            description: `${kitchenSizeCategory} 기준: ${kitchenWorkDays}일 공사`,
+            quantity: kitchenWorkDays,
+            unit: '일',
+            unit_price: furnitureLabor.daily_rate,
+            total_price: Math.round(kitchenWorkDays * furnitureLabor.daily_rate),
+            cost_type: 'labor',
+            labor_ratio: 1,
+            sort_order: sortOrder++,
+            reference_type: 'labor',
+            reference_id: furnitureLabor.id,
+        });
+    }
+
+    // 주방 복합비용 (기타 부자재 등) - 규칙 1 적용 (주방에서 복합비용 허용)
     const kitchenCost = standardPricing.composite.find(c =>
         c.category === '주방' || c.cost_name.includes('주방') || c.cost_name.includes('싱크대')
     );
-    if (kitchenCost) {
+    if (kitchenCost && isCompositeCostAllowed(kitchenCost.category)) {
         items.push({
             category: QUOTE_CATEGORIES.KITCHEN,
+            sub_category: '기타',
             item_name: kitchenCost.cost_name,
-            description: kitchenCost.description || '주방 가구 및 설치',
+            description: kitchenCost.description || '주방 부자재 및 기타',
             quantity: 1,
             unit: kitchenCost.unit || '식',
             unit_price: kitchenCost.unit_price,
@@ -653,13 +1105,12 @@ function generateQuoteItems(
         });
     }
 
-    // 12. 욕실 공사 (화장실 개수 기반 - fixtures 우선)
-    const bathroomCount = analysisResult?.fixtures?.toilet ||
-        analysisResult?.rooms?.filter(r => r.type === 'bathroom').length || 2;
+    // 12. 욕실 공사 (화장실 개수 기반 - fixtures 우선) - 규칙 1 적용 (욕실에서 복합비용 허용)
+    // bathroomCount는 위에서 이미 계산됨
     const bathroomCost = standardPricing.composite.find(c =>
         c.category === '욕실' || c.cost_name.includes('욕실') || c.cost_name.includes('화장실')
     );
-    if (bathroomCost) {
+    if (bathroomCost && isCompositeCostAllowed(bathroomCost.category)) {
         items.push({
             category: QUOTE_CATEGORIES.BATHROOM,
             item_name: bathroomCost.cost_name,

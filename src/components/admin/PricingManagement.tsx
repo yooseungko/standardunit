@@ -117,6 +117,35 @@ export default function PricingManagement({ isDemoMode }: PricingManagementProps
         setIsModalOpen(true);
     };
 
+    // 일괄 수정 (자재 단가)
+    const handleBulkUpdate = async (ids: string[], updates: Partial<MaterialPrice>) => {
+        try {
+            setSaving(true);
+
+            // 각 항목 업데이트
+            for (const id of ids) {
+                const item = materialPrices.find(m => m.id === id);
+                if (item) {
+                    await fetch('/api/pricing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'material',
+                            data: { ...item, ...updates }
+                        }),
+                    });
+                }
+            }
+
+            await fetchPricing();
+            alert(`✅ ${ids.length}개 항목이 수정되었습니다.`);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : '일괄 수정에 실패했습니다.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -204,6 +233,7 @@ export default function PricingManagement({ isDemoMode }: PricingManagementProps
                     data={materialPrices}
                     onEdit={handleEdit}
                     onDelete={(id) => handleDelete('material', id)}
+                    onBulkUpdate={handleBulkUpdate}
                 />
             )}
 

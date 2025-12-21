@@ -2,13 +2,6 @@
 
 import { useState, useEffect } from "react";
 
-interface Category {
-    id: number;
-    name: string;
-    productCount: number;
-    children?: Category[];
-}
-
 interface CrawledProduct {
     id?: string;
     category: string;
@@ -21,15 +14,33 @@ interface CrawledProduct {
     imageUrl?: string;
     description?: string;
     brand?: string;
+    source?: string;
 }
 
-// 카테고리 영역 정의
+// 크롤러 소스 타입
+type CrawlerSource = "ohouse" | "zzro";
+
+// 카테고리 정보
+interface CategoryInfo {
+    name: string;
+    parent?: string;
+    slug?: string;
+    productCount?: number;
+}
+
+// 소스별 카테고리 그룹
 interface CategoryGroup {
     groupName: string;
-    categories: Category[];
+    categories: Array<{
+        id: string | number;
+        name: string;
+        productCount?: number;
+        children?: Array<{ id: string | number; name: string; productCount?: number }>;
+    }>;
 }
 
-const CATEGORY_GROUPS: CategoryGroup[] = [
+// 오하우스 카테고리
+const OHOUSE_CATEGORY_GROUPS: CategoryGroup[] = [
     {
         groupName: "마감재",
         categories: [
@@ -137,18 +148,156 @@ const CATEGORY_GROUPS: CategoryGroup[] = [
     },
 ];
 
-// 기존 호환성을 위한 전체 카테고리 배열
-const CATEGORIES: Category[] = CATEGORY_GROUPS.flatMap(g => g.categories);
+// 자재로 카테고리 - 실제 zzro.kr 사이트 구조 반영
+const ZZRO_CATEGORY_GROUPS: CategoryGroup[] = [
+    {
+        groupName: "목자재",
+        categories: [
+            {
+                id: "wooden", name: "목자재", children: [
+                    { id: "wooden-all", name: "전체" },
+                    { id: "wooden-scantling", name: "각재" },
+                    { id: "wooden-plywood", name: "합판" },
+                    { id: "wooden-mdf", name: "MDF" },
+                    { id: "wooden-molding", name: "몰딩" },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "타일",
+        categories: [
+            {
+                id: "tile", name: "타일", children: [
+                    { id: "tile-all", name: "전체" },
+                    { id: "tile-porcelain", name: "포세린" },
+                    { id: "tile-ceramic", name: "도기질" },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "수전",
+        categories: [
+            {
+                id: "faucet", name: "수전", children: [
+                    { id: "faucet-all", name: "전체" },
+                    { id: "faucet-kitchen", name: "주방수전" },
+                    { id: "faucet-bath", name: "욕실수전" },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "도어/철물",
+        categories: [
+            {
+                id: "door", name: "도어", children: [
+                    { id: "door-all", name: "전체" },
+                    { id: "door-handle", name: "손잡이" },
+                    { id: "door-rail", name: "경첩/레일" },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "부자재",
+        categories: [
+            {
+                id: "subsidiary", name: "부자재", children: [
+                    { id: "subsidiary-all", name: "전체" },
+                    { id: "subsidiary-adhesive", name: "접착제/본드" },
+                    { id: "subsidiary-hardware", name: "기타철물" },
+                    { id: "subsidiary-switch", name: "스위치" },
+                    { id: "subsidiary-concent", name: "콘센트" },
+                    { id: "subsidiary-tacker", name: "타카핀" },
+                    { id: "subsidiary-access", name: "점검구" },
+                    { id: "subsidiary-corner", name: "코너비드" },
+                    { id: "subsidiary-trench", name: "육가/유강" },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "조명",
+        categories: [
+            {
+                id: "lights", name: "조명", children: [
+                    { id: "lights-all", name: "전체" },
+                    { id: "lights-recessed", name: "매입등" },
+                    { id: "lights-ceiling", name: "천정등" },
+                    { id: "lights-direct", name: "직부등" },
+                    { id: "lights-pendant", name: "펜던트등" },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "도기",
+        categories: [
+            {
+                id: "sanitaryware", name: "도기", children: [
+                    { id: "sanitaryware-all", name: "전체" },
+                    { id: "sanitaryware-americanstandard", name: "아메리칸스탠다드" },
+                    { id: "sanitaryware-dk", name: "DK" },
+                    { id: "sanitaryware-lauche", name: "라우체" },
+                ]
+            },
+        ]
+    },
+    {
+        groupName: "경량자재",
+        categories: [
+            {
+                id: "light", name: "경량자재", children: [
+                    { id: "light-all", name: "전체" },
+                ]
+            },
+        ]
+    },
+];
+
+
+// 크롤러 소스 정보
+const CRAWLER_SOURCES = [
+    {
+        id: "ohouse" as const,
+        name: "오하우스 인테리어",
+        url: "https://ohouseinterior.com",
+        description: "욕실, 바닥, 타일, 전기, 문, 창호 등 인테리어 자재",
+        icon: "🏠",
+        categoryGroups: OHOUSE_CATEGORY_GROUPS,
+    },
+    {
+        id: "zzro" as const,
+        name: "자재로",
+        url: "https://zzro.kr",
+        description: "목자재, 타일, 수전, 도어, 부자재, 조명, 철물 등",
+        icon: "🔧",
+        categoryGroups: ZZRO_CATEGORY_GROUPS,
+    },
+];
 
 export default function PriceCrawler() {
+    const [selectedSource, setSelectedSource] = useState<CrawlerSource>("ohouse");
     const [crawling, setCrawling] = useState(false);
     const [progress, setProgress] = useState(0);
     const [currentCategory, setCurrentCategory] = useState<string>("");
     const [products, setProducts] = useState<CrawledProduct[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+    const [selectedCategories, setSelectedCategories] = useState<(string | number)[]>([]);
     const [importing, setImporting] = useState(false);
     const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
+
+    // 소스가 변경되면 선택된 카테고리 초기화
+    useEffect(() => {
+        setSelectedCategories([]);
+        setProducts([]);
+        setSelectedProducts(new Set());
+    }, [selectedSource]);
+
+    // 현재 소스의 카테고리 그룹 가져오기
+    const currentCategoryGroups = CRAWLER_SOURCES.find(s => s.id === selectedSource)?.categoryGroups || [];
 
     // 제품 선택/해제
     const toggleProductSelection = (idx: number) => {
@@ -174,10 +323,12 @@ export default function PriceCrawler() {
 
     // 전체 카테고리 선택/해제
     const toggleAllCategories = () => {
-        const allIds = CATEGORIES.flatMap(cat =>
-            cat.children
-                ? [cat.id, ...cat.children.map(c => c.id)]
-                : [cat.id]
+        const allIds = currentCategoryGroups.flatMap(g =>
+            g.categories.flatMap(cat =>
+                cat.children
+                    ? cat.children.map(c => c.id)
+                    : [cat.id]
+            )
         );
 
         if (selectedCategories.length === allIds.length) {
@@ -188,7 +339,7 @@ export default function PriceCrawler() {
     };
 
     // 카테고리 선택
-    const toggleCategory = (id: number) => {
+    const toggleCategory = (id: string | number) => {
         setSelectedCategories(prev =>
             prev.includes(id)
                 ? prev.filter(i => i !== id)
@@ -212,7 +363,10 @@ export default function PriceCrawler() {
             const response = await fetch("/api/admin/crawl-prices", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ categoryIds: selectedCategories }),
+                body: JSON.stringify({
+                    source: selectedSource,
+                    categoryIds: selectedCategories,
+                }),
             });
 
             const reader = response.body?.getReader();
@@ -268,7 +422,6 @@ export default function PriceCrawler() {
         setError(null);
 
         try {
-            const selectedProductList = products.filter((_, idx) => selectedProducts.has(idx));
             const response = await fetch("/api/admin/import-crawled-prices", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -297,6 +450,8 @@ export default function PriceCrawler() {
         return new Intl.NumberFormat("ko-KR").format(price);
     };
 
+    const currentSourceInfo = CRAWLER_SOURCES.find(s => s.id === selectedSource);
+
     return (
         <div className="space-y-6">
             {/* 헤더 */}
@@ -304,7 +459,7 @@ export default function PriceCrawler() {
                 <div>
                     <h2 className="text-2xl font-bold text-white">🕷️ 건자재 단가 크롤러</h2>
                     <p className="text-gray-400 mt-1">
-                        오하우스 인테리어에서 건자재 가격을 수집합니다
+                        여러 건자재 사이트에서 가격을 수집합니다
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -345,6 +500,34 @@ export default function PriceCrawler() {
                 </div>
             </div>
 
+            {/* 크롤러 소스 선택 */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                <h3 className="text-white font-medium mb-4">📦 크롤링 소스 선택</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {CRAWLER_SOURCES.map(source => (
+                        <button
+                            key={source.id}
+                            onClick={() => setSelectedSource(source.id)}
+                            className={`p-4 rounded-lg border-2 transition-all text-left ${selectedSource === source.id
+                                ? "border-blue-500 bg-blue-500/10"
+                                : "border-white/10 hover:border-white/30"
+                                }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="text-2xl">{source.icon}</span>
+                                <div>
+                                    <span className={`font-medium ${selectedSource === source.id ? "text-blue-400" : "text-white"}`}>
+                                        {source.name}
+                                    </span>
+                                    <p className="text-gray-400 text-sm mt-1">{source.description}</p>
+                                    <p className="text-gray-500 text-xs mt-1">{source.url}</p>
+                                </div>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* 에러 */}
             {error && (
                 <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
@@ -357,7 +540,7 @@ export default function PriceCrawler() {
                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-3">
                         <span className="text-blue-400">
-                            📦 {currentCategory} 크롤링 중...
+                            {currentSourceInfo?.icon} {currentCategory} 크롤링 중...
                         </span>
                         <span className="text-white font-bold">{progress}%</span>
                     </div>
@@ -383,7 +566,7 @@ export default function PriceCrawler() {
                         </button>
                     </div>
                     <div className="space-y-4 max-h-[500px] overflow-y-auto">
-                        {CATEGORY_GROUPS.map(group => (
+                        {currentCategoryGroups.map(group => (
                             <div key={group.groupName} className="border border-white/10 rounded-lg overflow-hidden">
                                 {/* 그룹 헤더 */}
                                 <div className="bg-white/10 px-3 py-2">
@@ -392,7 +575,7 @@ export default function PriceCrawler() {
                                 {/* 그룹 내 카테고리들 */}
                                 <div className="p-2 space-y-1">
                                     {group.categories.map(category => (
-                                        <div key={category.id}>
+                                        <div key={String(category.id)}>
                                             <label className="flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
                                                 <input
                                                     type="checkbox"
@@ -401,13 +584,15 @@ export default function PriceCrawler() {
                                                     className="rounded border-gray-600"
                                                 />
                                                 <span className="text-white flex-1 text-sm">{category.name}</span>
-                                                <span className="text-gray-400 text-xs">{category.productCount}</span>
+                                                {category.productCount && (
+                                                    <span className="text-gray-400 text-xs">{category.productCount}</span>
+                                                )}
                                             </label>
                                             {category.children && (
                                                 <div className="ml-6 space-y-1">
                                                     {category.children.map(child => (
                                                         <label
-                                                            key={child.id}
+                                                            key={String(child.id)}
                                                             className="flex items-center gap-2 p-1.5 hover:bg-white/5 rounded-lg cursor-pointer"
                                                         >
                                                             <input
@@ -417,7 +602,9 @@ export default function PriceCrawler() {
                                                                 className="rounded border-gray-600"
                                                             />
                                                             <span className="text-gray-300 flex-1 text-sm">{child.name}</span>
-                                                            <span className="text-gray-500 text-xs">{child.productCount}</span>
+                                                            {child.productCount && (
+                                                                <span className="text-gray-500 text-xs">{child.productCount}</span>
+                                                            )}
                                                         </label>
                                                     ))}
                                                 </div>
@@ -447,7 +634,7 @@ export default function PriceCrawler() {
                         {products.length === 0 ? (
                             <div className="p-8 text-center text-gray-400">
                                 <p className="text-4xl mb-4">🕷️</p>
-                                <p>카테고리를 선택하고 크롤링을 시작하세요</p>
+                                <p>소스와 카테고리를 선택하고 크롤링을 시작하세요</p>
                             </div>
                         ) : (
                             <table className="w-full">
@@ -461,9 +648,9 @@ export default function PriceCrawler() {
                                                 className="w-4 h-4 rounded"
                                             />
                                         </th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">소스</th>
                                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">카테고리</th>
                                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">제품명</th>
-                                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-400">사이즈</th>
                                         <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">가격</th>
                                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-400">단위</th>
                                     </tr>
@@ -484,6 +671,14 @@ export default function PriceCrawler() {
                                                 />
                                             </td>
                                             <td className="px-4 py-3">
+                                                <span className={`text-xs px-2 py-1 rounded ${product.source === 'ohouse'
+                                                    ? 'bg-green-500/20 text-green-400'
+                                                    : 'bg-blue-500/20 text-blue-400'
+                                                    }`}>
+                                                    {product.source === 'ohouse' ? '오하우스' : '자재로'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
                                                 <div>
                                                     <span className="text-gray-400 text-xs">{product.category}</span>
                                                     {product.subCategory && (
@@ -496,9 +691,6 @@ export default function PriceCrawler() {
                                                 {product.brand && (
                                                     <span className="text-gray-400 text-xs ml-2">({product.brand})</span>
                                                 )}
-                                            </td>
-                                            <td className="px-4 py-3 text-center text-gray-400 text-xs">
-                                                {product.size || '-'}
                                             </td>
                                             <td className="px-4 py-3 text-right text-blue-400 font-medium">
                                                 ₩{formatPrice(product.price)}

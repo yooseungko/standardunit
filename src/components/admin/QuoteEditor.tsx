@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Quote, QuoteItem, FloorplanAnalysisResult, QUOTE_CATEGORIES } from "@/types/quote";
+import StandardPricingPanel from "./StandardPricingPanel";
 
 interface QuoteEditorProps {
     estimateId?: number;
@@ -42,6 +43,10 @@ export default function QuoteEditor({
 
     // 수정 모드
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
+
+    // 표준단가 패널 및 견적서 테이블 접기
+    const [isPricingPanelOpen, setIsPricingPanelOpen] = useState(false);
+    const [isQuoteTableCollapsed, setIsQuoteTableCollapsed] = useState(false);
 
     // 자재 등급 변경 함수
     const upgradeToGrade = async (targetGrade: '일반' | '중급' | '고급') => {
@@ -495,145 +500,198 @@ export default function QuoteEditor({
                         </details>
                     )}
 
-                    {/* 공정별 항목 테이블 */}
-                    <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-white/5">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">포함</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">카테고리</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">항목명</th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-400">사이즈</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">수량</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">단가</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">금액</th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-400">작업</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                {Object.entries(itemsByCategory).map(([category, categoryItems]) => (
-                                    <>
-                                        {/* 카테고리 헤더 */}
-                                        <tr key={category} className="bg-white/5">
-                                            <td colSpan={7} className="px-4 py-2 text-white font-medium">
-                                                {category}
-                                            </td>
-                                            <td className="px-4 py-2 text-right text-white font-medium">
-                                                ₩{formatPrice(
-                                                    categoryItems
-                                                        .filter(i => i.is_included !== false)
-                                                        .reduce((s, i) => s + i.total_price, 0)
-                                                )}
-                                            </td>
-                                        </tr>
-                                        {/* 항목들 */}
-                                        {categoryItems.map(item => (
-                                            <tr
-                                                key={item.id}
-                                                className={`hover:bg-white/5 ${item.is_included === false ? 'opacity-50' : ''
-                                                    }`}
-                                            >
-                                                <td className="px-4 py-3">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={item.is_included !== false}
-                                                        onChange={() => toggleItemIncluded(item.id)}
-                                                        className="w-4 h-4 rounded"
-                                                    />
-                                                </td>
-                                                <td className="px-4 py-3 text-gray-400 text-sm">
-                                                    {item.sub_category || '-'}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    {editingItemId === item.id ? (
-                                                        <input
-                                                            type="text"
-                                                            value={item.item_name}
-                                                            onChange={e => updateItem(item.id, 'item_name', e.target.value)}
-                                                            className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
-                                                            autoFocus
-                                                        />
-                                                    ) : (
-                                                        <div>
-                                                            <p className="text-white">{item.item_name}</p>
-                                                            {item.description && (
-                                                                <p className="text-gray-500 text-xs">{item.description}</p>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 text-center text-gray-400 text-xs">
-                                                    {item.size || '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    {editingItemId === item.id ? (
-                                                        <div className="flex items-center gap-1 justify-end">
-                                                            <input
-                                                                type="number"
-                                                                value={item.quantity}
-                                                                onChange={e => updateItem(item.id, 'quantity', Number(e.target.value))}
-                                                                className="w-16 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-right"
-                                                            />
-                                                            <span className="text-gray-400 text-sm">{item.unit}</span>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-gray-300">
-                                                            {item.quantity} {item.unit}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    {editingItemId === item.id ? (
-                                                        <input
-                                                            type="number"
-                                                            value={item.unit_price}
-                                                            onChange={e => updateItem(item.id, 'unit_price', Number(e.target.value))}
-                                                            className="w-24 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-right"
-                                                        />
-                                                    ) : (
-                                                        <span className="text-gray-300 font-mono">
-                                                            ₩{formatPrice(item.unit_price)}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 text-right font-mono text-white">
-                                                    ₩{formatPrice(item.total_price)}
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        <button
-                                                            onClick={() => setEditingItemId(
-                                                                editingItemId === item.id ? null : item.id
-                                                            )}
-                                                            className="px-2 py-1 text-blue-400 hover:text-blue-300 text-xs"
-                                                        >
-                                                            {editingItemId === item.id ? '완료' : '수정'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => removeItem(item.id)}
-                                                            className="px-2 py-1 text-red-400 hover:text-red-300 text-xs"
-                                                        >
-                                                            삭제
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </>
-                                ))}
-                            </tbody>
-                        </table>
+                    {/* 표준단가에서 항목 추가 */}
+                    <StandardPricingPanel
+                        isOpen={isPricingPanelOpen}
+                        onToggle={() => setIsPricingPanelOpen(!isPricingPanelOpen)}
+                        onAddItem={(newItem) => {
+                            setItems(prev => [...prev, {
+                                ...newItem,
+                                quote_id: quote?.id || '',
+                                sort_order: prev.length,
+                                is_optional: false,
+                                created_at: new Date().toISOString(),
+                            } as QuoteItem]);
+                        }}
+                    />
 
-                        {/* 항목 추가 버튼 */}
-                        <div className="px-4 py-3 border-t border-white/10">
-                            <button
-                                onClick={addItem}
-                                className="text-blue-400 hover:text-blue-300 text-sm"
-                            >
-                                + 항목 추가
-                            </button>
-                        </div>
+                    {/* 공정별 항목 테이블 - 접기 가능 */}
+                    <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                        {/* 테이블 헤더 - 클릭하여 접기/펴기 */}
+                        <button
+                            onClick={() => setIsQuoteTableCollapsed(!isQuoteTableCollapsed)}
+                            className="w-full px-4 py-3 bg-white/5 flex items-center justify-between hover:bg-white/10 transition-colors"
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="text-lg">📋</span>
+                                <span className="text-white font-medium">견적 항목</span>
+                                <span className="text-gray-400 text-sm">
+                                    ({items.length}개 항목 / 합계 ₩{formatPrice(totalAmount)})
+                                </span>
+                            </div>
+                            <span className={`text-gray-400 transition-transform ${isQuoteTableCollapsed ? '' : 'rotate-180'}`}>
+                                ▼
+                            </span>
+                        </button>
+
+                        {/* 접혀있을 때 요약 표시 */}
+                        {isQuoteTableCollapsed ? (
+                            <div className="px-4 py-3 border-t border-white/10 text-gray-400 text-sm">
+                                <div className="flex flex-wrap gap-3">
+                                    {Object.entries(itemsByCategory).map(([category, categoryItems]) => (
+                                        <span key={category} className="px-2 py-1 bg-white/5 rounded">
+                                            {category}: ₩{formatPrice(
+                                                categoryItems
+                                                    .filter(i => i.is_included !== false)
+                                                    .reduce((s, i) => s + i.total_price, 0)
+                                            )}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            /* 펼쳐져 있을 때 전체 테이블 */
+                            <>
+                                <table className="w-full">
+                                    <thead className="bg-white/5">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">포함</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">카테고리</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">항목명</th>
+                                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-400">사이즈</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">수량</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">단가</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">금액</th>
+                                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-400">작업</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {Object.entries(itemsByCategory).map(([category, categoryItems]) => (
+                                            <React.Fragment key={`category-${category}`}>
+                                                {/* 카테고리 헤더 */}
+                                                <tr className="bg-white/5">
+                                                    <td colSpan={7} className="px-4 py-2 text-white font-medium">
+                                                        {category}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-right text-white font-medium">
+                                                        ₩{formatPrice(
+                                                            categoryItems
+                                                                .filter(i => i.is_included !== false)
+                                                                .reduce((s, i) => s + i.total_price, 0)
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                                {/* 항목들 */}
+                                                {categoryItems.map(item => (
+                                                    <tr
+                                                        key={item.id}
+                                                        className={`hover:bg-white/5 ${item.is_included === false ? 'opacity-50' : ''
+                                                            }`}
+                                                    >
+                                                        <td className="px-4 py-3">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={item.is_included !== false}
+                                                                onChange={() => toggleItemIncluded(item.id)}
+                                                                className="w-4 h-4 rounded"
+                                                            />
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-400 text-sm">
+                                                            {item.sub_category || '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            {editingItemId === item.id ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={item.item_name}
+                                                                    onChange={e => updateItem(item.id, 'item_name', e.target.value)}
+                                                                    className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                                                                    autoFocus
+                                                                />
+                                                            ) : (
+                                                                <div>
+                                                                    <p className="text-white">{item.item_name}</p>
+                                                                    {item.description && (
+                                                                        <p className="text-gray-500 text-xs">{item.description}</p>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center text-gray-400 text-xs">
+                                                            {item.size || '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            {editingItemId === item.id ? (
+                                                                <div className="flex items-center gap-1 justify-end">
+                                                                    <input
+                                                                        type="number"
+                                                                        value={item.quantity}
+                                                                        onChange={e => updateItem(item.id, 'quantity', Number(e.target.value))}
+                                                                        className="w-16 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-right"
+                                                                    />
+                                                                    <span className="text-gray-400 text-sm">{item.unit}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-gray-300">
+                                                                    {item.quantity} {item.unit}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            {editingItemId === item.id ? (
+                                                                <input
+                                                                    type="number"
+                                                                    value={item.unit_price}
+                                                                    onChange={e => updateItem(item.id, 'unit_price', Number(e.target.value))}
+                                                                    className="w-24 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-right"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-gray-300 font-mono">
+                                                                    ₩{formatPrice(item.unit_price)}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-mono text-white">
+                                                            ₩{formatPrice(item.total_price)}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <div className="flex items-center justify-center gap-1">
+                                                                <button
+                                                                    onClick={() => setEditingItemId(
+                                                                        editingItemId === item.id ? null : item.id
+                                                                    )}
+                                                                    className="px-2 py-1 text-blue-400 hover:text-blue-300 text-xs"
+                                                                >
+                                                                    {editingItemId === item.id ? '완료' : '수정'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => removeItem(item.id)}
+                                                                    className="px-2 py-1 text-red-400 hover:text-red-300 text-xs"
+                                                                >
+                                                                    삭제
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </React.Fragment>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                {/* 항목 추가 버튼 */}
+                                <div className="px-4 py-3 border-t border-white/10">
+                                    <button
+                                        onClick={addItem}
+                                        className="text-blue-400 hover:text-blue-300 text-sm"
+                                    >
+                                        + 직접 항목 추가
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
+
 
                     {/* 금액 요약 및 옵션 */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

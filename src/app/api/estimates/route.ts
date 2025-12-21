@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        const { complexName, size, floorType, name, phone, email, wantsConstruction, constructionScope } = body;
+        const { complexName, size, floorType, name, phone, email, wantsConstruction, constructionScope, additionalNotes } = body;
 
         // 필수 필드 검증
         if (!complexName || !size || !name || !phone || !email) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
             wants_construction: wantsConstruction || false,
             status: 'pending',
             created_at: new Date().toISOString(),
-            notes: null,
+            notes: additionalNotes || null,
             construction_scope: constructionScope || [],
         };
 
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
                     wants_construction: wantsConstruction || false,
                     status: 'pending',
                     construction_scope: constructionScope || [],
+                    notes: additionalNotes || null,
                 }])
                 .select();
 
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
                     wants_construction: savedEstimate.wants_construction ?? false,
                     created_at: savedEstimate.created_at || new Date().toISOString(),
                     construction_scope: savedEstimate.construction_scope || [],
+                    notes: savedEstimate.notes,
                 });
                 console.log('Admin notification result:', emailResult);
             } catch (emailError) {
@@ -100,6 +102,7 @@ export async function POST(request: NextRequest) {
             wants_construction: newEstimate.wants_construction ?? false,
             created_at: newEstimate.created_at ?? new Date().toISOString(),
             construction_scope: newEstimate.construction_scope || [],
+            notes: newEstimate.notes,
         }).catch(err => console.error('Failed to send admin notification:', err));
 
         return NextResponse.json(

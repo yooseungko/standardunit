@@ -275,7 +275,7 @@ export default function QuoteManagement() {
             {/* 견적서 상세/편집 모달 */}
             {selectedQuote && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+                    <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden">
                         {/* 모달 헤더 */}
                         <div className="p-6 border-b border-white/10 flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -291,8 +291,8 @@ export default function QuoteManagement() {
                                 <button
                                     onClick={() => setEditMode(!editMode)}
                                     className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${editMode
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-white/10 text-gray-400 hover:text-white'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white/10 text-gray-400 hover:text-white'
                                         }`}
                                 >
                                     {editMode ? '✏️ 편집 중' : '✏️ 편집'}
