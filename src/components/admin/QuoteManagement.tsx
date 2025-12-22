@@ -86,8 +86,6 @@ export default function QuoteManagement() {
 
     // 견적서 삭제
     const handleDeleteQuote = async (quoteId: string) => {
-        if (!confirm('정말 이 견적서를 삭제하시겠습니까?')) return;
-
         try {
             const response = await fetch(`/api/quotes?id=${quoteId}`, {
                 method: 'DELETE',

@@ -111,6 +111,7 @@ export default function LaborPricingTable({ data, onEdit, onDelete, searchQuery 
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">직종</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">설명</th>
                             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">일당</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">단위</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">작업</th>
                         </tr>
                     </thead>
@@ -125,7 +126,7 @@ export default function LaborPricingTable({ data, onEdit, onDelete, searchQuery 
                                         <span className="text-white font-medium">{labor.labor_type}</span>
                                         {labor.representative_grade && (
                                             <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">
-                                                {labor.representative_grade}대표
+                                                {labor.representative_grade}
                                             </span>
                                         )}
                                     </div>
@@ -133,6 +134,9 @@ export default function LaborPricingTable({ data, onEdit, onDelete, searchQuery 
                                 <td className="px-4 py-3 text-gray-400 text-sm">{labor.description || '-'}</td>
                                 <td className="px-4 py-3 text-right font-mono text-white">
                                     ₩{formatPrice(labor.daily_rate)}
+                                </td>
+                                <td className="px-4 py-3 text-center text-gray-400">
+                                    품
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                     <div className="flex items-center justify-center gap-2">
@@ -154,7 +158,7 @@ export default function LaborPricingTable({ data, onEdit, onDelete, searchQuery 
                         ))}
                         {filteredData.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                                     {categoryFilter === 'all' ? '등록된 인건비가 없습니다.' : `'${categoryFilter}' 직종의 데이터가 없습니다.`}
                                 </td>
                             </tr>

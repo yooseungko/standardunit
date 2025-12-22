@@ -424,7 +424,7 @@ export default function MaterialPricingTable({ data, onEdit, onDelete, onBulkUpd
                                         <span className="text-white">{material.product_name}</span>
                                         {material.representative_grade && (
                                             <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded whitespace-nowrap">
-                                                {material.representative_grade}대표
+                                                {material.representative_grade}
                                             </span>
                                         )}
                                     </div>

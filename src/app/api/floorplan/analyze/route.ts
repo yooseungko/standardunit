@@ -19,7 +19,7 @@ async function fetchImageAsBase64(url: string): Promise<string> {
 }
 
 // Gemini Vision을 사용한 도면 분석
-async function analyzeFloorplanWithGemini(imageUrl: string): Promise<FloorplanAnalysisResult> {
+async function analyzeFloorplanWithGemini(imageUrl: string, propertySize?: number): Promise<FloorplanAnalysisResult> {
     const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
 
     // 이미지를 base64로 변환
@@ -45,22 +45,56 @@ async function analyzeFloorplanWithGemini(imageUrl: string): Promise<FloorplanAn
         }
     }
 
-    // DB에서 표준 단가 데이터 조회 (프롬프트에 포함시키기 위해)
+    // ⭐ DB에서 대표 항목(기본)만 조회 - AI가 이 항목들의 수량을 계산
     const [laborResult, materialResult, compositeResult] = await Promise.all([
-        supabase.from('labor_costs').select('labor_type, daily_rate, description'),
-        supabase.from('material_prices').select('category, sub_category, product_name, unit'),
-        supabase.from('composite_costs').select('cost_name, category, unit'),
+        supabase.from('labor_costs')
+            .select('*')
+            .eq('is_active', true)
+            .eq('representative_grade', '기본'),
+        supabase.from('material_prices')
+            .select('*')
+            .eq('is_active', true)
+            .eq('representative_grade', '기본'),
+        supabase.from('composite_costs')
+            .select('*')
+            .eq('is_active', true)
+            .eq('representative_grade', '기본'),
     ]);
 
-    const pricingData = {
+    const representativeItems = {
         labor: laborResult.data || [],
         material: materialResult.data || [],
         composite: compositeResult.data || [],
     };
 
-    // 프롬프트 생성 (별도 모듈에서 가져오기)
+    console.log('📋 대표 항목 개수:', {
+        labor: representativeItems.labor.length,
+        material: representativeItems.material.length,
+        composite: representativeItems.composite.length,
+    });
+
+    // 프롬프트 생성 (대표 항목 목록 포함)
     const { buildFloorplanAnalysisPrompt } = await import('@/lib/prompts/floorplanAnalysis');
-    const prompt = buildFloorplanAnalysisPrompt(pricingData);
+    let prompt = buildFloorplanAnalysisPrompt(representativeItems);
+
+    // ⭐ 전용면적 정보가 있으면 프롬프트에 추가
+    if (propertySize) {
+        const pyeong = (propertySize / 3.3).toFixed(1);
+        const sizeCategory = propertySize < 100 ? '30평대'
+            : propertySize < 130 ? '40평대'
+                : propertySize < 165 ? '50평대'
+                    : '60평대 이상';
+
+        prompt = `
+# ⚠️ 중요: 전용면적 참고 정보
+- 전용면적: ${propertySize}㎡ (약 ${pyeong}평)
+- 평형대: ${sizeCategory}
+- 도면에서 치수가 불명확할 경우 이 정보를 기준으로 계산해주세요.
+
+${prompt}`;
+
+        console.log('📋 전용면적 정보 포함:', { propertySize, pyeong, sizeCategory });
+    }
 
     console.log('📋 Gemini 프롬프트 길이:', prompt.length, '자');
 
@@ -77,6 +111,8 @@ async function analyzeFloorplanWithGemini(imageUrl: string): Promise<FloorplanAn
     const response = await result.response;
     const text = response.text();
 
+    console.log('📋 Gemini 응답 (처음 500자):', text.substring(0, 500));
+
     // JSON 추출
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -85,7 +121,44 @@ async function analyzeFloorplanWithGemini(imageUrl: string): Promise<FloorplanAn
 
     const analysisData = JSON.parse(jsonMatch[0]);
 
-    // 분석 결과를 표준 형식으로 변환
+    // 새로운 형식인지 확인 (floorplan + quantities 형식)
+    if (analysisData.floorplan && analysisData.quantities) {
+        console.log('📋 새로운 형식 감지 - 대표항목 기반 분석');
+
+        const fp = analysisData.floorplan;
+        const rooms: RoomAnalysis[] = (fp.rooms || []).map((room: Record<string, unknown>) => ({
+            name: room.name as string,
+            type: room.type as RoomAnalysis['type'],
+            width: 0,
+            height: 0,
+            area: room.area as number,
+            wallHeight: DEFAULT_WALL_HEIGHT,
+        }));
+
+        // 새로운 형식의 결과 반환
+        const analysisResult: FloorplanAnalysisResult = {
+            totalArea: fp.totalArea || rooms.reduce((sum: number, r: RoomAnalysis) => sum + (r.area || 0), 0),
+            rooms,
+            calculations: {
+                floorArea: fp.floorArea || fp.totalArea,
+                wallArea: fp.wallArea || 0,
+                ceilingArea: fp.ceilingArea || fp.floorArea || fp.totalArea,
+                wallLength: 0,
+                windowCount: 0,
+                doorCount: 0,
+            },
+            // quantities를 그대로 전달 (견적서 생성에서 사용)
+            quantities: analysisData.quantities,
+            confidence: analysisData.confidence || 0.8,
+            analysisNotes: analysisData.notes,
+        };
+
+        return analysisResult;
+    }
+
+    // 기존 형식 (호환성 유지)
+    console.log('📋 기존 형식 감지 - 레거시 분석');
+
     const rooms: RoomAnalysis[] = (analysisData.rooms || []).map((room: Record<string, unknown>) => ({
         name: room.name as string,
         type: room.type as RoomAnalysis['type'],
@@ -109,7 +182,6 @@ async function analyzeFloorplanWithGemini(imageUrl: string): Promise<FloorplanAn
             windowCount: analysisData.calculations?.windowCount || analysisData.fixtures?.windows || 0,
             doorCount: analysisData.calculations?.doorCount || 0,
         },
-        // Gemini가 계산한 설비 수량
         fixtures: analysisData.fixtures ? {
             toilet: analysisData.fixtures.toilet || 0,
             sink: analysisData.fixtures.sink || 0,
@@ -248,7 +320,7 @@ function calculateEstimatedMaterials(
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { floorplan_id, image_url } = body;
+        const { floorplan_id, image_url, property_size } = body;
 
         if (!floorplan_id && !image_url) {
             return NextResponse.json(
@@ -259,6 +331,7 @@ export async function POST(request: NextRequest) {
 
         let imageUrl = image_url;
         const floorplanId = floorplan_id;
+        const propertySize = property_size; // 전용면적
 
         // floorplan_id가 제공된 경우 DB에서 URL 조회
         if (floorplan_id && !image_url) {
@@ -287,8 +360,8 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-            // Gemini Vision으로 분석
-            const analysisResult = await analyzeFloorplanWithGemini(imageUrl);
+            // Gemini Vision으로 분석 (전용면적 정보 전달)
+            const analysisResult = await analyzeFloorplanWithGemini(imageUrl, propertySize);
 
             // 분석 결과 저장
             if (floorplanId) {

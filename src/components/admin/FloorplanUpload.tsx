@@ -5,12 +5,14 @@ import { Floorplan, FloorplanAnalysisResult, ROOM_TYPE_LABELS } from "@/types/qu
 
 interface FloorplanUploadProps {
     estimateId: number;
+    propertySize?: number; // 전용면적 (㎡)
     onUploadComplete?: (floorplan: Floorplan) => void;
     onAnalysisComplete?: (result: FloorplanAnalysisResult) => void;
 }
 
 export default function FloorplanUpload({
     estimateId,
+    propertySize,
     onUploadComplete,
     onAnalysisComplete
 }: FloorplanUploadProps) {
@@ -81,7 +83,10 @@ export default function FloorplanUpload({
             const response = await fetch('/api/floorplan/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ floorplan_id: floorplanId }),
+                body: JSON.stringify({
+                    floorplan_id: floorplanId,
+                    property_size: propertySize // 전용면적 정보 전달
+                }),
             });
 
             const result = await response.json();

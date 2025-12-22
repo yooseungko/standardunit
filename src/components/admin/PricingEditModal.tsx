@@ -96,9 +96,9 @@ export default function PricingEditModal({ tab, item, onClose, onSave, saving }:
                                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
                                 >
                                     <option value="">선택 안함</option>
-                                    <option value="기본">기본 등급 대표</option>
-                                    <option value="중급">중급 등급 대표</option>
-                                    <option value="고급">고급 등급 대표</option>
+                                    <option value="기본">기본</option>
+                                    <option value="중급">중급</option>
+                                    <option value="고급">고급</option>
                                 </select>
                             </div>
                         </>
@@ -220,9 +220,9 @@ export default function PricingEditModal({ tab, item, onClose, onSave, saving }:
                                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
                                 >
                                     <option value="">선택 안함</option>
-                                    <option value="기본">기본 등급 대표</option>
-                                    <option value="중급">중급 등급 대표</option>
-                                    <option value="고급">고급 등급 대표</option>
+                                    <option value="기본">기본</option>
+                                    <option value="중급">중급</option>
+                                    <option value="고급">고급</option>
                                 </select>
                             </div>
                         </>
@@ -344,9 +344,9 @@ export default function PricingEditModal({ tab, item, onClose, onSave, saving }:
                                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
                                 >
                                     <option value="">선택 안함</option>
-                                    <option value="기본">기본 등급 대표</option>
-                                    <option value="중급">중급 등급 대표</option>
-                                    <option value="고급">고급 등급 대표</option>
+                                    <option value="기본">기본</option>
+                                    <option value="중급">중급</option>
+                                    <option value="고급">고급</option>
                                 </select>
                             </div>
                         </>

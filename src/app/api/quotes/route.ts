@@ -136,25 +136,44 @@ export async function PUT(request: NextRequest) {
             }
         }
 
-        // 항목 업데이트
+        // 항목 업데이트  
         if (items && items.length > 0) {
-            // 기존 항목 삭제 후 새로 삽입
-            await supabase.from('quote_items').delete().eq('quote_id', id);
+            // 현재 items의 id 목록
+            const currentItemIds = items
+                .filter((item: { id?: string }) => item.id)
+                .map((item: { id: string }) => item.id);
 
-            const itemsToInsert = items.map((item: Record<string, unknown>, index: number) => ({
-                ...item,
-                quote_id: id,
-                sort_order: index,
-            }));
+            // 기존 항목 중 현재 목록에 없는 것들 삭제
+            if (currentItemIds.length > 0) {
+                await supabase
+                    .from('quote_items')
+                    .delete()
+                    .eq('quote_id', id)
+                    .not('id', 'in', `(${currentItemIds.join(',')})`);
+            } else {
+                // 모든 기존 항목 삭제 (새로 생성된 견적서인 경우)
+                await supabase.from('quote_items').delete().eq('quote_id', id);
+            }
+
+            // 항목 upsert (id가 있으면 수정, 없으면 삽입)
+            const itemsToUpsert = items.map((item: Record<string, unknown>, index: number) => {
+                const { id: itemId, created_at, ...rest } = item;
+                return {
+                    ...rest,
+                    ...(itemId ? { id: itemId } : {}), // 기존 id가 있으면 포함
+                    quote_id: id,
+                    sort_order: index,
+                };
+            });
 
             const { error: itemsError } = await supabase
                 .from('quote_items')
-                .insert(itemsToInsert);
+                .upsert(itemsToUpsert, { onConflict: 'id' });
 
             if (itemsError) {
                 console.error('Quote items update error:', itemsError);
                 return NextResponse.json(
-                    { success: false, error: '견적 항목 수정 실패' },
+                    { success: false, error: '견적 항목 수정 실패: ' + itemsError.message },
                     { status: 500 }
                 );
             }
@@ -190,6 +209,8 @@ export async function DELETE(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
+        console.log('📋 견적서 삭제 요청:', { id });
+
         if (!id) {
             return NextResponse.json(
                 { success: false, error: 'ID가 필요합니다.' },
@@ -198,7 +219,12 @@ export async function DELETE(request: NextRequest) {
         }
 
         // 견적 항목 먼저 삭제 (CASCADE가 없는 경우)
-        await supabase.from('quote_items').delete().eq('quote_id', id);
+        const { error: itemsError } = await supabase.from('quote_items').delete().eq('quote_id', id);
+        if (itemsError) {
+            console.error('❌ 견적 항목 삭제 실패:', itemsError);
+        } else {
+            console.log('✅ 견적 항목 삭제 완료');
+        }
 
         // 견적서 삭제
         const { error } = await supabase
@@ -207,12 +233,14 @@ export async function DELETE(request: NextRequest) {
             .eq('id', id);
 
         if (error) {
+            console.error('❌ 견적서 삭제 실패:', error);
             return NextResponse.json(
                 { success: false, error: '삭제 실패: ' + error.message },
                 { status: 500 }
             );
         }
 
+        console.log('✅ 견적서 삭제 완료:', id);
         return NextResponse.json({
             success: true,
             message: '견적서가 삭제되었습니다.',

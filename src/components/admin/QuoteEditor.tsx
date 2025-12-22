@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Quote, QuoteItem, FloorplanAnalysisResult, QUOTE_CATEGORIES } from "@/types/quote";
+import { Quote, QuoteItem, FloorplanAnalysisResult, QUOTE_CATEGORIES, QuoteVersion } from "@/types/quote";
 import StandardPricingPanel from "./StandardPricingPanel";
+import QuoteVersionHistory from "./QuoteVersionHistory";
 
 interface QuoteEditorProps {
     estimateId?: number;
     floorplanId?: string;
     analysisResult?: FloorplanAnalysisResult | null;
     initialQuote?: Quote | null; // 기존 견적서 수정용
+    manualMode?: boolean; // 도면 없이 수동 입력 모드 (수량 1로 시작)
     onQuoteGenerated?: (quote: Quote) => void;
     onQuoteSent?: () => void;
     onClose?: () => void;
@@ -19,6 +21,7 @@ export default function QuoteEditor({
     floorplanId,
     analysisResult,
     initialQuote,
+    manualMode = false,
     onQuoteGenerated,
     onQuoteSent,
     onClose,
@@ -47,6 +50,10 @@ export default function QuoteEditor({
     // 표준단가 패널 및 견적서 테이블 접기
     const [isPricingPanelOpen, setIsPricingPanelOpen] = useState(false);
     const [isQuoteTableCollapsed, setIsQuoteTableCollapsed] = useState(false);
+
+    // 버전 히스토리 패널
+    const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
+    const [savingVersion, setSavingVersion] = useState(false);
 
     // 자재 등급 변경 함수
     const upgradeToGrade = async (targetGrade: '일반' | '중급' | '고급') => {
@@ -113,6 +120,7 @@ export default function QuoteEditor({
                     estimate_id: estimateId,
                     floorplan_id: floorplanId,
                     analysis_result: analysisResult,
+                    manual_mode: manualMode, // 수동 모드일 때 수량 1로 시작
                     options: {
                         discountPercent,
                         includeVat,
@@ -140,6 +148,28 @@ export default function QuoteEditor({
         }
     };
 
+    // 현재 견적서를 버전으로 저장 (백업)
+    const saveCurrentVersion = async (reason: string = '수정') => {
+        if (!quote) return;
+
+        try {
+            setSavingVersion(true);
+            await fetch('/api/quotes/versions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    quote_id: quote.id,
+                    reason: reason,
+                }),
+            });
+        } catch (err) {
+            console.error('Version save error:', err);
+            // 버전 저장 실패해도 진행
+        } finally {
+            setSavingVersion(false);
+        }
+    };
+
     // 견적서 업데이트
     const updateQuote = async () => {
         if (!quote) return;
@@ -147,6 +177,9 @@ export default function QuoteEditor({
         try {
             setLoading(true);
             setError(null);
+
+            // ⭐ 저장 전 현재 버전을 자동 백업
+            await saveCurrentVersion('수정 전 자동 저장');
 
             const response = await fetch('/api/quotes', {
                 method: 'PUT',
@@ -175,6 +208,23 @@ export default function QuoteEditor({
             setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // 롤백 처리 콜백
+    const handleRollback = async (version: QuoteVersion) => {
+        // 롤백 후 현재 견적서 새로고침
+        try {
+            const response = await fetch(`/api/quotes?id=${quote?.id}`);
+            const result = await response.json();
+            if (result.success && result.data) {
+                setQuote(result.data);
+                setItems(result.data.items || []);
+                setNotes(result.data.notes || "");
+                setCalculationComment(result.data.calculation_comment || "");
+            }
+        } catch (err) {
+            console.error('Refresh after rollback error:', err);
         }
     };
 
@@ -500,6 +550,14 @@ export default function QuoteEditor({
                         </details>
                     )}
 
+                    {/* 📜 버전 히스토리 */}
+                    <QuoteVersionHistory
+                        quoteId={quote.id}
+                        onRollback={handleRollback}
+                        isOpen={isVersionHistoryOpen}
+                        onToggle={() => setIsVersionHistoryOpen(!isVersionHistoryOpen)}
+                    />
+
                     {/* 표준단가에서 항목 추가 */}
                     <StandardPricingPanel
                         isOpen={isPricingPanelOpen}
@@ -518,21 +576,39 @@ export default function QuoteEditor({
                     {/* 공정별 항목 테이블 - 접기 가능 */}
                     <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
                         {/* 테이블 헤더 - 클릭하여 접기/펴기 */}
-                        <button
-                            onClick={() => setIsQuoteTableCollapsed(!isQuoteTableCollapsed)}
-                            className="w-full px-4 py-3 bg-white/5 flex items-center justify-between hover:bg-white/10 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
+                        <div className="w-full px-4 py-3 bg-white/5 flex items-center justify-between">
+                            <button
+                                onClick={() => setIsQuoteTableCollapsed(!isQuoteTableCollapsed)}
+                                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                            >
                                 <span className="text-lg">📋</span>
                                 <span className="text-white font-medium">견적 항목</span>
                                 <span className="text-gray-400 text-sm">
                                     ({items.length}개 항목 / 합계 ₩{formatPrice(totalAmount)})
                                 </span>
-                            </div>
-                            <span className={`text-gray-400 transition-transform ${isQuoteTableCollapsed ? '' : 'rotate-180'}`}>
-                                ▼
-                            </span>
-                        </button>
+                                <span className={`text-gray-400 transition-transform ${isQuoteTableCollapsed ? '' : 'rotate-180'}`}>
+                                    ▼
+                                </span>
+                            </button>
+                            {quote && (
+                                <button
+                                    onClick={updateQuote}
+                                    disabled={loading}
+                                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="animate-spin">⏳</span>
+                                            저장 중...
+                                        </>
+                                    ) : (
+                                        <>
+                                            💾 변경사항 저장
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                        </div>
 
                         {/* 접혀있을 때 요약 표시 */}
                         {isQuoteTableCollapsed ? (
@@ -620,22 +696,35 @@ export default function QuoteEditor({
                                                         <td className="px-4 py-3 text-center text-gray-400 text-xs">
                                                             {item.size || '-'}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right">
-                                                            {editingItemId === item.id ? (
-                                                                <div className="flex items-center gap-1 justify-end">
-                                                                    <input
-                                                                        type="number"
-                                                                        value={item.quantity}
-                                                                        onChange={e => updateItem(item.id, 'quantity', Number(e.target.value))}
-                                                                        className="w-16 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-right"
-                                                                    />
-                                                                    <span className="text-gray-400 text-sm">{item.unit}</span>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-gray-300">
-                                                                    {item.quantity} {item.unit}
-                                                                </span>
-                                                            )}
+                                                        <td className="px-4 py-3">
+                                                            {/* 항상 인라인 +/- 수량 조절 */}
+                                                            <div className="flex items-center justify-center gap-1">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const newQty = Math.max(0, item.quantity - 1);
+                                                                        updateItem(item.id, 'quantity', newQty);
+                                                                    }}
+                                                                    className="w-6 h-6 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white rounded text-sm font-bold"
+                                                                >
+                                                                    −
+                                                                </button>
+                                                                <input
+                                                                    type="number"
+                                                                    value={item.quantity}
+                                                                    onChange={e => updateItem(item.id, 'quantity', Math.max(0, Number(e.target.value)))}
+                                                                    className="w-14 px-1 py-1 bg-gray-800 border border-gray-600 rounded text-white text-sm text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                                    min="0"
+                                                                />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        updateItem(item.id, 'quantity', item.quantity + 1);
+                                                                    }}
+                                                                    className="w-6 h-6 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white rounded text-sm font-bold"
+                                                                >
+                                                                    +
+                                                                </button>
+                                                                <span className="text-gray-400 text-xs ml-1">{item.unit}</span>
+                                                            </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-right">
                                                             {editingItemId === item.id ? (
@@ -655,22 +744,12 @@ export default function QuoteEditor({
                                                             ₩{formatPrice(item.total_price)}
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
-                                                            <div className="flex items-center justify-center gap-1">
-                                                                <button
-                                                                    onClick={() => setEditingItemId(
-                                                                        editingItemId === item.id ? null : item.id
-                                                                    )}
-                                                                    className="px-2 py-1 text-blue-400 hover:text-blue-300 text-xs"
-                                                                >
-                                                                    {editingItemId === item.id ? '완료' : '수정'}
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => removeItem(item.id)}
-                                                                    className="px-2 py-1 text-red-400 hover:text-red-300 text-xs"
-                                                                >
-                                                                    삭제
-                                                                </button>
-                                                            </div>
+                                                            <button
+                                                                onClick={() => removeItem(item.id)}
+                                                                className="px-2 py-1 text-red-400 hover:text-red-300 text-xs"
+                                                            >
+                                                                삭제
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -777,36 +856,52 @@ export default function QuoteEditor({
                     </div>
 
                     {/* 액션 버튼 */}
-                    <div className="flex items-center justify-end gap-4">
-                        <button
-                            onClick={updateQuote}
-                            disabled={loading}
-                            className={`px-6 py-3 rounded-lg font-medium transition-all ${loading
-                                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
-                                }`}
-                        >
-                            {loading ? '저장 중...' : '💾 저장'}
-                        </button>
-                        <button
-                            onClick={sendQuote}
-                            disabled={sending || quote.status === 'sent'}
-                            className={`px-6 py-3 rounded-lg font-medium transition-all ${sending || quote.status === 'sent'
-                                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                : 'bg-blue-600 text-white hover:bg-blue-500'
-                                }`}
-                        >
-                            {sending ? (
-                                <span className="flex items-center gap-2">
-                                    <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                                    발송 중...
-                                </span>
-                            ) : quote.status === 'sent' ? (
-                                '✓ 발송 완료'
-                            ) : (
-                                '📧 견적서 발송'
-                            )}
-                        </button>
+                    <div className="flex items-center justify-between">
+                        {/* 버전 저장 안내 */}
+                        <p className="text-gray-500 text-sm">
+                            💡 저장 시 이전 버전이 자동으로 백업됩니다
+                        </p>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={updateQuote}
+                                disabled={loading || savingVersion}
+                                className={`px-6 py-3 rounded-lg font-medium transition-all ${loading || savingVersion
+                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                                    }`}
+                            >
+                                {savingVersion ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                        버전 저장 중...
+                                    </span>
+                                ) : loading ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                        저장 중...
+                                    </span>
+                                ) : '💾 저장'}
+                            </button>
+                            <button
+                                onClick={sendQuote}
+                                disabled={sending || quote.status === 'sent'}
+                                className={`px-6 py-3 rounded-lg font-medium transition-all ${sending || quote.status === 'sent'
+                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                    : 'bg-blue-600 text-white hover:bg-blue-500'
+                                    }`}
+                            >
+                                {sending ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                        발송 중...
+                                    </span>
+                                ) : quote.status === 'sent' ? (
+                                    '✓ 발송 완료'
+                                ) : (
+                                    '📧 견적서 발송'
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

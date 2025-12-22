@@ -199,23 +199,52 @@ export async function POST(request: NextRequest) {
                         if (error) throw error;
                         result = updated;
                     } else {
-                        // 추가
-                        const { data: inserted, error } = await supabase
+                        // 먼저 같은 이름이 있는지 확인
+                        const { data: existing } = await supabase
                             .from('labor_costs')
-                            .insert({
-                                labor_type: data.labor_type,
-                                labor_type_en: data.labor_type_en,
-                                description: data.description,
-                                daily_rate: data.daily_rate,
-                                hourly_rate: data.hourly_rate,
-                                notes: data.notes,
-                                representative_grade: data.representative_grade || null,
-                            })
-                            .select()
+                            .select('id')
+                            .eq('labor_type', data.labor_type)
                             .single();
 
-                        if (error) throw error;
-                        result = inserted;
+                        if (existing) {
+                            // 이미 존재하면 업데이트
+                            const { data: updated, error } = await supabase
+                                .from('labor_costs')
+                                .update({
+                                    labor_type: data.labor_type,
+                                    labor_type_en: data.labor_type_en,
+                                    description: data.description,
+                                    daily_rate: data.daily_rate,
+                                    hourly_rate: data.hourly_rate,
+                                    notes: data.notes,
+                                    representative_grade: data.representative_grade || null,
+                                    is_active: true,
+                                })
+                                .eq('id', existing.id)
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            result = updated;
+                        } else {
+                            // 새로 삽입
+                            const { data: inserted, error } = await supabase
+                                .from('labor_costs')
+                                .insert({
+                                    labor_type: data.labor_type,
+                                    labor_type_en: data.labor_type_en,
+                                    description: data.description,
+                                    daily_rate: data.daily_rate,
+                                    hourly_rate: data.hourly_rate,
+                                    notes: data.notes,
+                                    representative_grade: data.representative_grade || null,
+                                })
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            result = inserted;
+                        }
                     }
                     break;
 
@@ -301,30 +330,68 @@ export async function POST(request: NextRequest) {
                         if (error) throw error;
                         result = updated;
                     } else {
-                        const { data: inserted, error } = await supabase
+                        // 먼저 같은 이름이 있는지 확인
+                        const { data: existing } = await supabase
                             .from('composite_costs')
-                            .insert({
-                                cost_name: data.cost_name,
-                                cost_name_en: data.cost_name_en,
-                                description: data.description,
-                                category: data.category,
-                                sub_category: data.sub_category,
-                                unit: data.unit,
-                                unit_price: data.unit_price,
-                                labor_ratio: data.labor_ratio,
-                                material_ratio: data.material_ratio,
-                                service_ratio: data.service_ratio,
-                                other_ratio: data.other_ratio,
-                                min_quantity: data.min_quantity,
-                                calculation_notes: data.calculation_notes,
-                                notes: data.notes,
-                                representative_grade: data.representative_grade || null,
-                            })
-                            .select()
+                            .select('id')
+                            .eq('cost_name', data.cost_name)
                             .single();
 
-                        if (error) throw error;
-                        result = inserted;
+                        if (existing) {
+                            // 이미 존재하면 업데이트
+                            const { data: updated, error } = await supabase
+                                .from('composite_costs')
+                                .update({
+                                    cost_name: data.cost_name,
+                                    cost_name_en: data.cost_name_en,
+                                    description: data.description,
+                                    category: data.category,
+                                    sub_category: data.sub_category,
+                                    unit: data.unit,
+                                    unit_price: data.unit_price,
+                                    labor_ratio: data.labor_ratio,
+                                    material_ratio: data.material_ratio,
+                                    service_ratio: data.service_ratio,
+                                    other_ratio: data.other_ratio,
+                                    min_quantity: data.min_quantity,
+                                    calculation_notes: data.calculation_notes,
+                                    notes: data.notes,
+                                    representative_grade: data.representative_grade || null,
+                                    is_active: true, // 다시 활성화
+                                })
+                                .eq('id', existing.id)
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            result = updated;
+                        } else {
+                            // 새로 삽입
+                            const { data: inserted, error } = await supabase
+                                .from('composite_costs')
+                                .insert({
+                                    cost_name: data.cost_name,
+                                    cost_name_en: data.cost_name_en,
+                                    description: data.description,
+                                    category: data.category,
+                                    sub_category: data.sub_category,
+                                    unit: data.unit,
+                                    unit_price: data.unit_price,
+                                    labor_ratio: data.labor_ratio,
+                                    material_ratio: data.material_ratio,
+                                    service_ratio: data.service_ratio,
+                                    other_ratio: data.other_ratio,
+                                    min_quantity: data.min_quantity,
+                                    calculation_notes: data.calculation_notes,
+                                    notes: data.notes,
+                                    representative_grade: data.representative_grade || null,
+                                })
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            result = inserted;
+                        }
                     }
                     break;
 
@@ -384,8 +451,16 @@ export async function POST(request: NextRequest) {
         }
     } catch (error) {
         console.error('단가 저장 오류:', error);
+        const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+        const supabaseError = (error as { code?: string; details?: string; hint?: string });
         return NextResponse.json(
-            { success: false, error: '단가 저장에 실패했습니다.' },
+            {
+                success: false,
+                error: `단가 저장에 실패했습니다: ${errorMessage}`,
+                details: supabaseError.details || null,
+                hint: supabaseError.hint || null,
+                code: supabaseError.code || null,
+            },
             { status: 500 }
         );
     }

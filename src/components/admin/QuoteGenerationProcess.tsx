@@ -25,6 +25,7 @@ export default function QuoteGenerationProcess({
     const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
     const [floorplanId, setFloorplanId] = useState<string | null>(null);
     const [analysisResult, setAnalysisResult] = useState<FloorplanAnalysisResult | null>(null);
+    const [manualMode, setManualMode] = useState(false); // 도면 없이 수동 모드
 
     const steps = [
         { number: 1, title: '도면 업로드', description: '도면 이미지를 업로드합니다' },
@@ -34,7 +35,7 @@ export default function QuoteGenerationProcess({
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-4xl my-8">
+            <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-6xl my-8">
                 {/* 헤더 */}
                 <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <div>
@@ -107,6 +108,7 @@ export default function QuoteGenerationProcess({
 
                             <FloorplanUpload
                                 estimateId={estimateId}
+                                propertySize={propertySize}
                                 onUploadComplete={(floorplan) => {
                                     setFloorplanId(floorplan.id);
                                     setCurrentStep(2);
@@ -120,7 +122,10 @@ export default function QuoteGenerationProcess({
                             {/* 도면 없이 진행 */}
                             <div className="text-center pt-4 border-t border-white/10">
                                 <button
-                                    onClick={() => setCurrentStep(3)}
+                                    onClick={() => {
+                                        setManualMode(true);
+                                        setCurrentStep(3);
+                                    }}
                                     className="text-gray-400 hover:text-white text-sm underline"
                                 >
                                     도면 없이 수동으로 견적 작성하기 →
@@ -158,6 +163,7 @@ export default function QuoteGenerationProcess({
                                 estimateId={estimateId}
                                 floorplanId={floorplanId || undefined}
                                 analysisResult={analysisResult}
+                                manualMode={manualMode}
                                 onQuoteSent={() => {
                                     onComplete?.();
                                     onClose();

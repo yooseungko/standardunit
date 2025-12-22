@@ -101,7 +101,7 @@ export interface FloorplanAnalysisResult {
     };
 
     // 공정별 예상 자재
-    estimatedMaterials: {
+    estimatedMaterials?: {
         category: string;
         subCategory?: string;
         item: string;
@@ -109,6 +109,13 @@ export interface FloorplanAnalysisResult {
         unit: string;
         notes?: string;
     }[];
+
+    // ⭐ 대표 항목별 수량 (새로운 방식)
+    quantities?: Record<string, {
+        item: string;
+        unit: string;
+        quantity: number;
+    }>;
 
     // 메타 정보
     confidence: number; // 분석 신뢰도 (0-1)
@@ -214,6 +221,7 @@ export interface GenerateQuoteRequest {
     estimate_id: number;
     floorplan_id?: string;
     analysis_result?: FloorplanAnalysisResult;
+    manual_mode?: boolean; // 도면 없이 수동 모드 (수량 1로 시작)
     options?: {
         includeVat?: boolean; // 부가세 포함 여부
         discountPercent?: number; // 할인율
@@ -261,6 +269,7 @@ export const QUOTE_CATEGORIES = {
     DOOR: '목문',
     FURNITURE: '가구',
     CLEANING: '청소',
+    LABOR: '인건비',  // 인건비 카테고리 추가
     OTHER: '기타',
 } as const;
 
@@ -278,3 +287,89 @@ export const ROOM_TYPE_LABELS: Record<RoomAnalysis['type'], string> = {
 
 // 기본 층고 (mm)
 export const DEFAULT_WALL_HEIGHT = 2400;
+
+// ========================================
+// 견적서 버전 관리 타입
+// ========================================
+
+// 견적서 버전 항목
+export interface QuoteVersionItem {
+    id: string;
+    version_id: string;
+    category: string;
+    sub_category?: string;
+    item_name: string;
+    description?: string;
+    size?: string;
+    quantity: number;
+    unit: string;
+    unit_price: number;
+    total_price: number;
+    cost_type: CostType;
+    labor_ratio: number;
+    sort_order: number;
+    is_optional: boolean;
+    is_included: boolean;
+    reference_type?: string;
+    reference_id?: string;
+    created_at: string;
+}
+
+// 견적서 버전 (히스토리)
+export interface QuoteVersion {
+    id: string;
+    quote_id: string;
+    version_number: number;
+    quote_number: string; // 원본 견적번호 + 버전 표시
+    saved_at: string;
+    saved_reason?: string; // '수정', '등급변경', '롤백' 등
+
+    // 금액 스냅샷
+    total_amount: number;
+    labor_cost: number;
+    material_cost: number;
+    other_cost: number;
+    discount_amount: number;
+    discount_reason?: string;
+    vat_amount: number;
+    final_amount: number;
+
+    // 상태 스냅샷
+    status: QuoteStatus;
+    notes?: string;
+    calculation_comment?: string;
+    valid_until?: string;
+
+    // 고객 정보 스냅샷
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
+    property_address?: string;
+    property_size?: number;
+
+    created_at: string;
+
+    // 조인 데이터
+    items?: QuoteVersionItem[];
+}
+
+// 버전 목록 조회 응답
+export interface QuoteVersionListResponse {
+    success: boolean;
+    data?: QuoteVersion[];
+    error?: string;
+}
+
+// 롤백 요청
+export interface QuoteRollbackRequest {
+    quote_id: string;
+    version_id: string;
+}
+
+// 롤백 응답
+export interface QuoteRollbackResponse {
+    success: boolean;
+    quote?: Quote; // 롤백된 현재 견적서
+    message?: string;
+    error?: string;
+}

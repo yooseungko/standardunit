@@ -130,7 +130,7 @@ export default function CompositePricingTable({ data, onEdit, onDelete, searchQu
                                         <span className="text-white font-medium">{composite.cost_name}</span>
                                         {composite.representative_grade && (
                                             <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded whitespace-nowrap">
-                                                {composite.representative_grade}대표
+                                                {composite.representative_grade}
                                             </span>
                                         )}
                                     </div>

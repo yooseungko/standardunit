@@ -44,23 +44,34 @@ function generateAICommentHtml(comment: string | undefined): string {
     // 마크다운을 HTML로 변환
     const lines = comment.split('\n');
     let html = '<div style="margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border-radius: 12px; border: 1px solid #bfdbfe;">';
-    html += '<h3 style="margin: 0 0 15px 0; font-size: 16px; color: #1e40af;">🤖 AI 견적 분석</h3>';
+    html += '<h3 style="margin: 0 0 15px 0; font-size: 16px; color: #1e40af;">📋 견적 산출 내역</h3>';
     html += '<div style="font-size: 14px; color: #374151;">';
 
     lines.forEach(line => {
         if (line.startsWith('## ')) {
             html += `<p style="margin: 15px 0 8px 0; font-weight: 600; color: #1f2937;">${line.replace('## ', '')}</p>`;
+        } else if (line.startsWith('### ')) {
+            html += `<p style="margin: 12px 0 6px 0; font-weight: 600; color: #374151; font-size: 13px;">${line.replace('### ', '')}</p>`;
         } else if (line.startsWith('- **')) {
-            const match = line.match(/- \*\*(.+?)\*\*: (.+)/);
+            const match = line.match(/- \*\*(.+?)\*\*:? ?(.*)$/);
             if (match) {
-                html += `<p style="margin: 4px 0; padding-left: 12px;">• <strong>${match[1]}</strong>: ${match[2]}</p>`;
+                html += `<p style="margin: 4px 0; padding-left: 12px;">• <strong>${match[1]}</strong>${match[2] ? `: ${match[2]}` : ''}</p>`;
             }
-        } else if (line.startsWith('- ')) {
-            html += `<p style="margin: 4px 0; padding-left: 12px; color: #6b7280;">${line.replace('- ', '• ')}</p>`;
+        } else if (line.startsWith('- ') || line.startsWith('• ')) {
+            html += `<p style="margin: 4px 0; padding-left: 12px; color: #6b7280;">${line.replace(/^[-•] /, '• ')}</p>`;
+        } else if (line.match(/^[✅✓☑] /)) {
+            html += `<p style="margin: 4px 0; padding-left: 12px; color: #059669;">${line}</p>`;
+        } else if (line.match(/^[⚠️❗] /)) {
+            html += `<p style="margin: 4px 0; padding-left: 12px; color: #d97706;">${line}</p>`;
+        } else if (line.match(/^[◆◇▶►] /)) {
+            html += `<p style="margin: 8px 0 4px 0; font-weight: 500; color: #4b5563;">${line}</p>`;
         } else if (line.startsWith('*') && line.endsWith('*')) {
             html += `<p style="margin: 15px 0 0 0; font-size: 12px; color: #9ca3af; font-style: italic;">${line.replace(/\*/g, '')}</p>`;
         } else if (line === '---') {
             html += '<hr style="border: none; border-top: 1px solid #d1d5db; margin: 15px 0;">';
+        } else if (line.trim()) {
+            // 일반 텍스트도 포함
+            html += `<p style="margin: 4px 0; color: #374151;">${line}</p>`;
         }
     });
 
@@ -149,9 +160,7 @@ function generateQuoteEmailHtml(quote: Quote & { items: QuoteItem[] }): string {
                 ` : ''}
             </div>
 
-            ${generateAICommentHtml(quote.calculation_comment)}
-
-            <!-- 견적 상세 -->
+            <!-- 견적 상세 (위로 이동) -->
             <h2 style="margin: 0 0 15px 0; font-size: 18px; color: #333;">📋 공정별 견적 내역</h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
                 <thead>
@@ -208,13 +217,24 @@ function generateQuoteEmailHtml(quote: Quote & { items: QuoteItem[] }): string {
             ` : ''}
 
             <!-- 안내사항 -->
-            <div style="padding: 15px; background-color: #e3f2fd; border-radius: 8px; font-size: 13px; color: #1565c0;">
+            <div style="padding: 15px; background-color: #e3f2fd; border-radius: 8px; font-size: 13px; color: #1565c0; margin-bottom: 20px;">
                 <p style="margin: 0 0 10px 0; font-weight: 600;">📌 안내사항</p>
                 <ul style="margin: 0; padding-left: 20px;">
                     <li>본 견적서는 ${quote.valid_until || '발행일로부터 14일'}까지 유효합니다.</li>
                     <li>현장 상황에 따라 금액이 변동될 수 있습니다.</li>
                     <li>자세한 상담이 필요하시면 연락 주세요.</li>
                 </ul>
+            </div>
+
+            <!-- 상세 보기 버튼 -->
+            <div style="text-align: center; padding: 20px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://standardunit.kr'}/q/${quote.id}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; text-decoration: none; padding: 16px 40px; border-radius: 30px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    📋 견적서 전체 보기
+                </a>
+                <p style="margin: 15px 0 0 0; color: #666; font-size: 12px;">
+                    모바일에서도 편하게 확인하세요
+                </p>
             </div>
         </div>
 
@@ -274,8 +294,8 @@ export async function POST(request: NextRequest) {
         const emailHtml = generateQuoteEmailHtml(quote as Quote & { items: QuoteItem[] });
 
         const { data: emailData, error: emailError } = await resend.emails.send({
-            // Resend 기본 이메일 사용 (도메인 인증 전)
-            from: '스탠다드 유닛 <onboarding@resend.dev>',
+            // 인증된 도메인 이메일 사용
+            from: '스탠다드 유닛 <noreply@standardunit.kr>',
             to: toEmail,
             subject: `[스탠다드 유닛] ${toName || '고객'}님의 인테리어 견적서 (${quote.quote_number})`,
             html: emailHtml,
