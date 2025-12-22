@@ -79,38 +79,8 @@ function generateAICommentHtml(comment: string | undefined): string {
     return html;
 }
 
-// 견적서 이메일 HTML 생성
+// 견적서 이메일 HTML 생성 (간소화 버전)
 function generateQuoteEmailHtml(quote: Quote & { items: QuoteItem[] }): string {
-    const itemsByCategory: Record<string, QuoteItem[]> = {};
-
-    quote.items?.forEach(item => {
-        if (!item.is_included) return;
-        if (!itemsByCategory[item.category]) {
-            itemsByCategory[item.category] = [];
-        }
-        itemsByCategory[item.category].push(item);
-    });
-
-    const categoryRows = Object.entries(itemsByCategory).map(([category, items]) => {
-        const categoryTotal = items.reduce((sum, item) => sum + item.total_price, 0);
-        const itemRows = items.map(item => `
-            <tr>
-                <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #666;">${item.item_name}</td>
-                <td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right;">${item.quantity} ${item.unit}</td>
-                <td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right;">₩${formatPrice(item.unit_price)}</td>
-                <td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; font-weight: 500;">₩${formatPrice(item.total_price)}</td>
-            </tr>
-        `).join('');
-
-        return `
-            <tr style="background-color: #f8f9fa;">
-                <td colspan="3" style="padding: 10px 12px; font-weight: 600; color: #333;">${category}</td>
-                <td style="padding: 10px 12px; text-align: right; font-weight: 600;">₩${formatPrice(categoryTotal)}</td>
-            </tr>
-            ${itemRows}
-        `;
-    }).join('');
-
     return `
 <!DOCTYPE html>
 <html>
@@ -120,126 +90,79 @@ function generateQuoteEmailHtml(quote: Quote & { items: QuoteItem[] }): string {
     <title>견적서 - ${quote.quote_number}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;">
-    <div style="max-width: 700px; margin: 0 auto; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <!-- 헤더 -->
-        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 30px; border-radius: 12px 12px 0 0;">
-            <h1 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700;">스탠다드 유닛</h1>
-            <p style="margin: 0; opacity: 0.9; font-size: 14px;">인테리어 표준 견적서</p>
-            ${getGradeBadgeHtml(quote.quote_number)}
+        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
+            <h1 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700;">스탠다드 유닛</h1>
+            <p style="margin: 0; opacity: 0.8; font-size: 13px;">인테리어 표준 견적 서비스</p>
         </div>
 
         <!-- 본문 -->
-        <div style="background-color: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <!-- 견적 정보 -->
-            <div style="margin-bottom: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                    <div>
-                        <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">견적번호</p>
-                        <p style="margin: 0; font-weight: 600; font-size: 16px;">${quote.quote_number}</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">유효기간</p>
-                        <p style="margin: 0; font-weight: 600; font-size: 16px;">${quote.valid_until || '-'}</p>
-                    </div>
-                </div>
-                <div>
-                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">고객명</p>
-                    <p style="margin: 0; font-weight: 600; font-size: 16px;">${quote.customer_name || '-'} 님</p>
-                </div>
-                ${quote.property_address ? `
-                <div style="margin-top: 10px;">
-                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">시공 주소</p>
-                    <p style="margin: 0; font-size: 14px;">${quote.property_address}</p>
-                </div>
-                ` : ''}
-                ${quote.property_size ? `
-                <div style="margin-top: 10px;">
-                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">시공 면적</p>
-                    <p style="margin: 0; font-size: 14px;">${quote.property_size}㎡ (${(quote.property_size / 3.3).toFixed(1)}평)</p>
-                </div>
-                ` : ''}
+        <div style="background-color: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <!-- 메인 메시지 -->
+            <div style="text-align: center; margin-bottom: 35px;">
+                <h2 style="margin: 0 0 10px 0; font-size: 24px; color: #1a1a2e; font-weight: 700;">
+                    ${quote.customer_name || '고객'}님,<br>견적서가 완료되었습니다
+                </h2>
+                <p style="margin: 0; color: #666; font-size: 14px;">
+                    요청하신 인테리어 견적서를 확인해주세요
+                </p>
             </div>
 
-            <!-- 견적 상세 (위로 이동) -->
-            <h2 style="margin: 0 0 15px 0; font-size: 18px; color: #333;">📋 공정별 견적 내역</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                <thead>
-                    <tr style="background-color: #1a1a2e; color: white;">
-                        <th style="padding: 12px; text-align: left; font-weight: 500;">항목</th>
-                        <th style="padding: 12px; text-align: right; font-weight: 500;">수량</th>
-                        <th style="padding: 12px; text-align: right; font-weight: 500;">단가</th>
-                        <th style="padding: 12px; text-align: right; font-weight: 500;">금액</th>
+            <!-- 고객 정보 -->
+            <div style="margin-bottom: 30px; padding: 24px; background-color: #f8f9fa; border-radius: 12px;">
+                <h3 style="margin: 0 0 16px 0; font-size: 14px; color: #1a1a2e; font-weight: 600;">📋 견적 정보</h3>
+                <table style="width: 100%; font-size: 14px;">
+                    <tr>
+                        <td style="padding: 8px 0; color: #666; width: 80px;">견적번호</td>
+                        <td style="padding: 8px 0; font-weight: 500; color: #333;">${quote.quote_number}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    ${categoryRows}
-                </tbody>
-            </table>
-
-            <!-- 금액 요약 -->
-            <div style="padding: 20px; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="color: #666;">인건비</span>
-                    <span style="font-weight: 500;">₩${formatPrice(quote.labor_cost)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="color: #666;">자재비</span>
-                    <span style="font-weight: 500;">₩${formatPrice(quote.material_cost)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd;">
-                    <span style="color: #666;">소계</span>
-                    <span style="font-weight: 500;">₩${formatPrice(quote.total_amount)}</span>
-                </div>
-                ${quote.discount_amount > 0 ? `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #e74c3c;">
-                    <span>할인 ${quote.discount_reason || ''}</span>
-                    <span>-₩${formatPrice(quote.discount_amount)}</span>
-                </div>
-                ` : ''}
-                ${quote.vat_amount > 0 ? `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="color: #666;">부가세 (10%)</span>
-                    <span>₩${formatPrice(quote.vat_amount)}</span>
-                </div>
-                ` : ''}
-                <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px solid #1a1a2e;">
-                    <span style="font-size: 18px; font-weight: 700;">최종 금액</span>
-                    <span style="font-size: 24px; font-weight: 700; color: #1a1a2e;">₩${formatPrice(quote.final_amount)}</span>
-                </div>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">고객명</td>
+                        <td style="padding: 8px 0; font-weight: 500; color: #333;">${quote.customer_name || '-'} 님</td>
+                    </tr>
+                    ${quote.property_address ? `
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">시공 주소</td>
+                        <td style="padding: 8px 0; color: #333;">${quote.property_address}</td>
+                    </tr>
+                    ` : ''}
+                    ${quote.property_size ? `
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">시공 면적</td>
+                        <td style="padding: 8px 0; color: #333;">${quote.property_size}㎡ (${(quote.property_size / 3.3).toFixed(1)}평)</td>
+                    </tr>
+                    ` : ''}
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">유효기간</td>
+                        <td style="padding: 8px 0; color: #333;">${quote.valid_until || '발행일로부터 14일'}</td>
+                    </tr>
+                </table>
             </div>
 
-            ${quote.notes ? `
-            <!-- 특이사항 -->
-            <div style="padding: 15px; background-color: #fff3cd; border-radius: 8px; margin-bottom: 20px;">
-                <p style="margin: 0 0 5px 0; font-weight: 600; color: #856404;">📝 특이사항</p>
-                <p style="margin: 0; color: #856404; font-size: 14px;">${quote.notes}</p>
-            </div>
-            ` : ''}
-
-            <!-- 안내사항 -->
-            <div style="padding: 15px; background-color: #e3f2fd; border-radius: 8px; font-size: 13px; color: #1565c0; margin-bottom: 20px;">
-                <p style="margin: 0 0 10px 0; font-weight: 600;">📌 안내사항</p>
-                <ul style="margin: 0; padding-left: 20px;">
-                    <li>본 견적서는 ${quote.valid_until || '발행일로부터 14일'}까지 유효합니다.</li>
-                    <li>현장 상황에 따라 금액이 변동될 수 있습니다.</li>
-                    <li>자세한 상담이 필요하시면 연락 주세요.</li>
-                </ul>
-            </div>
-
-            <!-- 상세 보기 버튼 -->
-            <div style="text-align: center; padding: 20px 0;">
+            <!-- 견적서 전체 보기 버튼 -->
+            <div style="text-align: center; margin-bottom: 30px;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://standardunit.kr'}/q/${quote.id}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; text-decoration: none; padding: 16px 40px; border-radius: 30px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                   style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; text-decoration: none; padding: 18px 50px; border-radius: 30px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(26,26,46,0.3);">
                     📋 견적서 전체 보기
                 </a>
-                <p style="margin: 15px 0 0 0; color: #666; font-size: 12px;">
-                    모바일에서도 편하게 확인하세요
+                <p style="margin: 12px 0 0 0; color: #888; font-size: 12px;">
+                    버튼을 클릭하시면 상세 견적 내역을 확인하실 수 있습니다
+                </p>
+            </div>
+
+            <!-- 프로모션 혜택 -->
+            <div style="padding: 24px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; border: 1px solid #f59e0b;">
+                <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #92400e; font-weight: 700;">🎁 특별 혜택 안내</h3>
+                <p style="margin: 0; font-size: 14px; color: #78350f; line-height: 1.7;">
+                    이 견적으로 <strong>1월 시공계약시 비스포크 냉장고 증정</strong>,<br>
+                    <strong>타 업체 견적서 첨부시 100만원 추가할인</strong> 혜택을 드립니다!
                 </p>
             </div>
         </div>
 
         <!-- 푸터 -->
-        <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
+        <div style="text-align: center; padding: 25px; color: #999; font-size: 12px;">
             <p style="margin: 0 0 5px 0;">© 2024 스탠다드 유닛. All rights reserved.</p>
             <p style="margin: 0;">문의: contact@standardunit.kr</p>
         </div>

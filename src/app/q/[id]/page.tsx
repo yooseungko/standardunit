@@ -103,10 +103,10 @@ export default function QuoteViewPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
             {/* 헤더 */}
-            <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-6 px-4 sticky top-0 z-10 shadow-lg">
+            <header className="bg-black text-white py-6 px-4 sticky top-0 z-10 shadow-lg">
                 <div className="max-w-2xl mx-auto">
-                    <h1 className="text-xl font-bold">스탠다드 유닛</h1>
-                    <p className="text-blue-200 text-sm mt-1">인테리어 견적서</p>
+                    <h1 className="text-xl font-bold tracking-wide">Standard Unit</h1>
+                    <p className="text-gray-400 text-sm mt-1">인테리어 견적서</p>
                 </div>
             </header>
 
@@ -257,13 +257,31 @@ export default function QuoteViewPage() {
                 )}
 
                 {/* 안내사항 */}
-                <div className="bg-white/5 rounded-xl p-5 text-gray-400 text-sm">
+                <div className="bg-white/5 rounded-xl p-5 text-gray-400 text-sm mb-4">
                     <h3 className="text-white font-bold mb-2">📌 안내사항</h3>
                     <ul className="space-y-1 list-disc list-inside">
                         <li>본 견적서는 {quote.valid_until || "발행일로부터 14일"}까지 유효합니다.</li>
                         <li>현장 상황에 따라 금액이 변동될 수 있습니다.</li>
                         <li>자세한 상담이 필요하시면 연락 주세요.</li>
                     </ul>
+                </div>
+
+                {/* 특별 할인 혜택 */}
+                <div className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/50 rounded-xl p-5">
+                    <h3 className="text-amber-400 font-bold mb-3">🎁 특별 할인 혜택</h3>
+                    <div className="space-y-2 text-sm">
+                        <p className="text-white">
+                            <span className="text-amber-300 font-semibold">✓ 1월 시공계약시</span>{" "}
+                            비스포크 냉장고 증정
+                        </p>
+                        <p className="text-white">
+                            <span className="text-amber-300 font-semibold">✓ 타 업체 견적서 첨부시</span>{" "}
+                            100만원 추가할인
+                        </p>
+                    </div>
+                    <p className="text-gray-400 text-xs mt-3">
+                        * 본 혜택은 이 견적서로 시공 계약시에만 적용됩니다.
+                    </p>
                 </div>
             </main>
 
@@ -275,12 +293,12 @@ export default function QuoteViewPage() {
                         <p className="text-white font-bold text-lg">₩{formatPrice(quote.final_amount)}</p>
                     </div>
                     <a
-                        href="https://open.kakao.com/o/sExample" // 카카오톡 오픈채팅 링크
+                        href="https://open.kakao.com/o/sLPdwe7h"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-bold rounded-full transition-colors"
                     >
-                        💬 상담 신청하기
+                        💬 상담하기
                     </a>
                 </div>
             </div>
