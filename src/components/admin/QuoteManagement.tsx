@@ -109,6 +109,25 @@ export default function QuoteManagement() {
         return new Intl.NumberFormat('ko-KR').format(amount);
     };
 
+    // ⭐ 견적서 항목 기반 최종금액 계산 (items의 total_price 합계 - 할인 + VAT)
+    const calculateFinalAmount = (quote: Quote) => {
+        if (!quote.items || quote.items.length === 0) {
+            // items가 없으면 DB 저장값 사용
+            return quote.final_amount;
+        }
+
+        // 포함된 항목만 합산
+        const totalAmount = quote.items
+            .filter(item => item.is_included !== false)
+            .reduce((sum, item) => sum + (item.total_price || 0), 0);
+
+        // 할인 및 VAT 적용
+        const discountAmount = quote.discount_amount || 0;
+        const vatAmount = quote.vat_amount || 0;
+
+        return totalAmount - discountAmount + vatAmount;
+    };
+
     // 날짜 포맷
     const formatDate = (dateStr: string) => {
         return new Date(dateStr).toLocaleDateString('ko-KR', {
@@ -175,7 +194,7 @@ export default function QuoteManagement() {
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                     <p className="text-gray-400 text-sm">총 견적 금액</p>
                     <p className="text-2xl font-bold text-emerald-400 mt-1">
-                        ₩{formatMoney(quotes.reduce((sum, q) => sum + (q.final_amount || 0), 0))}
+                        ₩{formatMoney(quotes.reduce((sum, q) => sum + calculateFinalAmount(q), 0))}
                     </p>
                 </div>
             </div>
@@ -226,7 +245,7 @@ export default function QuoteManagement() {
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <span className="text-white font-bold">
-                                                ₩{formatMoney(quote.final_amount)}
+                                                ₩{formatMoney(calculateFinalAmount(quote))}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-center">
@@ -342,7 +361,7 @@ export default function QuoteManagement() {
                                         </div>
                                         <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/30">
                                             <p className="text-gray-400 text-sm">최종 금액</p>
-                                            <p className="text-lg font-bold text-emerald-400">₩{formatMoney(selectedQuote.final_amount)}</p>
+                                            <p className="text-lg font-bold text-emerald-400">₩{formatMoney(calculateFinalAmount(selectedQuote))}</p>
                                         </div>
                                     </div>
 

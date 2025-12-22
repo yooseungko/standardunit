@@ -176,9 +176,12 @@ export async function POST(request: NextRequest) {
         if (isSupabaseConfigured && supabase) {
             let result;
 
+            // "new-"로 시작하는 ID는 클라이언트에서 생성한 임시 ID이므로 새 항목으로 처리
+            const isNewItem = !data.id || data.id.toString().startsWith('new-');
+
             switch (type) {
                 case 'labor':
-                    if (data.id) {
+                    if (!isNewItem) {
                         // 수정
                         const { data: updated, error } = await supabase
                             .from('labor_costs')
@@ -249,7 +252,7 @@ export async function POST(request: NextRequest) {
                     break;
 
                 case 'material':
-                    if (data.id) {
+                    if (!isNewItem) {
                         const { data: updated, error } = await supabase
                             .from('material_prices')
                             .update({
@@ -303,7 +306,7 @@ export async function POST(request: NextRequest) {
                     break;
 
                 case 'composite':
-                    if (data.id) {
+                    if (!isNewItem) {
                         const { data: updated, error } = await supabase
                             .from('composite_costs')
                             .update({

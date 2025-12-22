@@ -73,7 +73,7 @@ export default function QuoteViewPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full" />
             </div>
         );
@@ -81,7 +81,7 @@ export default function QuoteViewPage() {
 
     if (error || !quote) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-black flex items-center justify-center p-4">
                 <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-6 text-center max-w-md">
                     <p className="text-red-400 text-lg font-medium">⚠️ 오류</p>
                     <p className="text-gray-300 mt-2">{error || "견적서를 찾을 수 없습니다."}</p>
@@ -101,7 +101,7 @@ export default function QuoteViewPage() {
     });
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen bg-black">
             {/* 헤더 */}
             <header className="bg-black text-white py-6 px-4 sticky top-0 z-10 shadow-lg">
                 <div className="max-w-2xl mx-auto">
@@ -149,26 +149,26 @@ export default function QuoteViewPage() {
                 {/* 최종 금액 카드 */}
                 <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-5 mb-4 shadow-lg">
                     <p className="text-emerald-100 text-sm">최종 견적 금액</p>
-                    <p className="text-white text-3xl font-bold mt-1">
+                    <p className="text-white font-bold mt-1" style={{ fontSize: '32px' }}>
                         ₩{formatPrice(quote.final_amount)}
                     </p>
                     <div className="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-3 text-sm">
                         <div>
                             <p className="text-emerald-100">인건비</p>
-                            <p className="text-white font-medium">₩{formatPrice(quote.labor_cost)}</p>
+                            <p className="text-white font-medium" style={{ fontSize: '16px' }}>₩{formatPrice(quote.labor_cost)}</p>
                         </div>
                         <div>
                             <p className="text-emerald-100">자재비</p>
-                            <p className="text-white font-medium">₩{formatPrice(quote.material_cost)}</p>
+                            <p className="text-white font-medium" style={{ fontSize: '16px' }}>₩{formatPrice(quote.material_cost)}</p>
                         </div>
                     </div>
                     {quote.discount_amount > 0 && (
-                        <p className="text-emerald-200 text-sm mt-2">
+                        <p className="text-emerald-200 mt-2" style={{ fontSize: '15px' }}>
                             할인 {quote.discount_reason}: -₩{formatPrice(quote.discount_amount)}
                         </p>
                     )}
                     {quote.vat_amount > 0 && (
-                        <p className="text-emerald-200 text-sm">
+                        <p className="text-emerald-200" style={{ fontSize: '15px' }}>
                             부가세: ₩{formatPrice(quote.vat_amount)}
                         </p>
                     )}
@@ -187,7 +187,7 @@ export default function QuoteViewPage() {
                                 {/* 카테고리 헤더 */}
                                 <div className="px-5 py-3 bg-white/5 flex justify-between items-center">
                                     <span className="text-white font-medium">{category}</span>
-                                    <span className="text-emerald-400 font-bold">
+                                    <span className="text-emerald-400 font-bold" style={{ fontSize: '16px' }}>
                                         ₩{formatPrice(categoryTotal)}
                                     </span>
                                 </div>
@@ -198,11 +198,11 @@ export default function QuoteViewPage() {
                                         <div key={item.id} className="px-5 py-3 flex justify-between items-center">
                                             <div className="flex-1 min-w-0 mr-3">
                                                 <p className="text-white text-sm truncate">{item.item_name}</p>
-                                                <p className="text-gray-400 text-xs">
+                                                <p className="text-gray-400" style={{ fontSize: '13px' }}>
                                                     {item.quantity} {item.unit} × ₩{formatPrice(item.unit_price)}
                                                 </p>
                                             </div>
-                                            <p className="text-white font-mono text-sm whitespace-nowrap">
+                                            <p className="text-white font-mono whitespace-nowrap" style={{ fontSize: '15px' }}>
                                                 ₩{formatPrice(item.total_price)}
                                             </p>
                                         </div>
@@ -286,11 +286,11 @@ export default function QuoteViewPage() {
             </main>
 
             {/* 하단 고정 CTA */}
-            <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-white/10 p-4">
+            <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur border-t border-white/10 p-4">
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
                     <div>
                         <p className="text-gray-400 text-xs">최종 금액</p>
-                        <p className="text-white font-bold text-lg">₩{formatPrice(quote.final_amount)}</p>
+                        <p className="text-white font-bold" style={{ fontSize: '20px' }}>₩{formatPrice(quote.final_amount)}</p>
                     </div>
                     <a
                         href="https://open.kakao.com/o/sLPdwe7h"

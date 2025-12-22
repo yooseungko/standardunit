@@ -138,9 +138,12 @@ export async function PUT(request: NextRequest) {
 
         // 항목 업데이트  
         if (items && items.length > 0) {
-            // 현재 items의 id 목록
+            // "new-"로 시작하는 ID는 임시 ID이므로 유효한 UUID가 아님
+            const isValidUUID = (id: string) => id && !id.toString().startsWith('new-');
+
+            // 현재 items의 id 목록 (유효한 UUID만)
             const currentItemIds = items
-                .filter((item: { id?: string }) => item.id)
+                .filter((item: { id?: string }) => item.id && isValidUUID(item.id))
                 .map((item: { id: string }) => item.id);
 
             // 기존 항목 중 현재 목록에 없는 것들 삭제
@@ -155,27 +158,58 @@ export async function PUT(request: NextRequest) {
                 await supabase.from('quote_items').delete().eq('quote_id', id);
             }
 
-            // 항목 upsert (id가 있으면 수정, 없으면 삽입)
-            const itemsToUpsert = items.map((item: Record<string, unknown>, index: number) => {
-                const { id: itemId, created_at, ...rest } = item;
-                return {
-                    ...rest,
-                    ...(itemId ? { id: itemId } : {}), // 기존 id가 있으면 포함
-                    quote_id: id,
-                    sort_order: index,
-                };
-            });
+            // 기존 항목 (유효한 UUID가 있는 것) - upsert
+            const existingItems = items
+                .filter((item: { id?: string }) => item.id && isValidUUID(item.id))
+                .map((item: Record<string, unknown>, index: number) => {
+                    const { created_at, ...rest } = item;
+                    return {
+                        ...rest,
+                        quote_id: id,
+                        sort_order: index,
+                    };
+                });
 
-            const { error: itemsError } = await supabase
-                .from('quote_items')
-                .upsert(itemsToUpsert, { onConflict: 'id' });
+            // 새 항목 (new-로 시작하는 ID 또는 ID가 없는 것) - insert
+            const newItems = items
+                .filter((item: { id?: string }) => !item.id || !isValidUUID(item.id))
+                .map((item: Record<string, unknown>, index: number) => {
+                    const { id: itemId, created_at, ...rest } = item;
+                    return {
+                        ...rest,
+                        quote_id: id,
+                        sort_order: existingItems.length + index,
+                    };
+                });
 
-            if (itemsError) {
-                console.error('Quote items update error:', itemsError);
-                return NextResponse.json(
-                    { success: false, error: '견적 항목 수정 실패: ' + itemsError.message },
-                    { status: 500 }
-                );
+            // 기존 항목 upsert
+            if (existingItems.length > 0) {
+                const { error: upsertError } = await supabase
+                    .from('quote_items')
+                    .upsert(existingItems, { onConflict: 'id' });
+
+                if (upsertError) {
+                    console.error('Quote items upsert error:', upsertError);
+                    return NextResponse.json(
+                        { success: false, error: '견적 항목 수정 실패: ' + upsertError.message },
+                        { status: 500 }
+                    );
+                }
+            }
+
+            // 새 항목 insert
+            if (newItems.length > 0) {
+                const { error: insertError } = await supabase
+                    .from('quote_items')
+                    .insert(newItems);
+
+                if (insertError) {
+                    console.error('Quote items insert error:', insertError);
+                    return NextResponse.json(
+                        { success: false, error: '견적 항목 추가 실패: ' + insertError.message },
+                        { status: 500 }
+                    );
+                }
             }
         }
 
