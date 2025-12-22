@@ -47,6 +47,10 @@ export default function QuoteViewPage() {
     const [quote, setQuote] = useState<Quote | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    // PDF 다운로드 함수 (PDF 전용 페이지로 이동)
+    const handleDownloadPdf = () => {
+        window.open(`/q/${quoteId}/print`, '_blank');
+    };
 
     useEffect(() => {
         if (!quoteId) return;
@@ -103,10 +107,18 @@ export default function QuoteViewPage() {
     return (
         <div className="min-h-screen bg-black">
             {/* 헤더 */}
-            <header className="bg-black text-white py-6 px-4 sticky top-0 z-10 shadow-lg">
-                <div className="max-w-2xl mx-auto">
-                    <h1 className="text-xl font-bold tracking-wide">Standard Unit</h1>
-                    <p className="text-gray-400 text-sm mt-1">인테리어 견적서</p>
+            <header className="bg-black text-white py-6 px-4 sticky top-0 z-10 shadow-lg print:static">
+                <div className="max-w-2xl mx-auto flex justify-between items-center">
+                    <div>
+                        <h1 className="text-xl font-bold tracking-wide">Standard Unit</h1>
+                        <p className="text-gray-400 text-sm mt-1">인테리어 견적서</p>
+                    </div>
+                    <button
+                        onClick={handleDownloadPdf}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm flex items-center gap-2"
+                    >
+                        📄 PDF 다운로드
+                    </button>
                 </div>
             </header>
 
@@ -301,6 +313,6 @@ export default function QuoteViewPage() {
                     </a>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
