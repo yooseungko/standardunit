@@ -4,16 +4,22 @@
 export * from './types';
 export * from './ohouse';
 export * from './zzro';
+export * from './hangel';
+export * from './ianmall';
 
 // 크롤러 레지스트리
 import { ohouseCrawler, OhouseCrawler, OHOUSE_CATEGORIES, OHOUSE_PARENT_CATEGORIES } from './ohouse';
 import { zzroCrawler, ZzroCrawler, ZZRO_CATEGORIES, ZZRO_PARENT_CATEGORIES } from './zzro';
+import { hangelCrawler, HangelCrawler, HANGEL_CATEGORIES, HANGEL_PARENT_CATEGORIES } from './hangel';
+import { ianmallCrawler, IanmallCrawler, IANMALL_CATEGORIES, IANMALL_PARENT_CATEGORIES } from './ianmall';
 import type { ICrawler, CategoryInfo } from './types';
 
 // 사용 가능한 크롤러 목록
 export const CRAWLERS = {
     ohouse: ohouseCrawler,
     zzro: zzroCrawler,
+    hangel: hangelCrawler,
+    ianmall: ianmallCrawler,
 } as const;
 
 export type CrawlerType = keyof typeof CRAWLERS;
@@ -42,6 +48,22 @@ export const CRAWLER_SOURCES = [
         categories: ZZRO_CATEGORIES,
         parentCategories: ZZRO_PARENT_CATEGORIES,
     },
+    {
+        id: 'hangel' as const,
+        name: '한글 중문',
+        url: 'https://hangel.co.kr',
+        description: '양개중문, 연동중문, 스윙중문, 미서기중문 등 중문 전문',
+        categories: HANGEL_CATEGORIES,
+        parentCategories: HANGEL_PARENT_CATEGORIES,
+    },
+    {
+        id: 'ianmall' as const,
+        name: '이안몰',
+        url: 'https://ian-mall.kr',
+        description: '싱크볼, 주방수전, 주방용품 전문',
+        categories: IANMALL_CATEGORIES,
+        parentCategories: IANMALL_PARENT_CATEGORIES,
+    },
 ];
 
 // 특정 소스의 카테고리 가져오기
@@ -51,6 +73,10 @@ export function getCategoriesBySource(source: CrawlerType): Record<string | numb
             return OHOUSE_CATEGORIES;
         case 'zzro':
             return ZZRO_CATEGORIES;
+        case 'hangel':
+            return HANGEL_CATEGORIES;
+        case 'ianmall':
+            return IANMALL_CATEGORIES;
         default:
             return {};
     }
@@ -63,7 +89,12 @@ export function getParentCategoriesBySource(source: CrawlerType): Record<string 
             return OHOUSE_PARENT_CATEGORIES;
         case 'zzro':
             return ZZRO_PARENT_CATEGORIES;
+        case 'hangel':
+            return HANGEL_PARENT_CATEGORIES;
+        case 'ianmall':
+            return IANMALL_PARENT_CATEGORIES;
         default:
             return {};
     }
 }
+

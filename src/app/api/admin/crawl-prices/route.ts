@@ -1,5 +1,5 @@
 // 통합 가격 크롤러 API
-// 여러 소스(오하우스, 자재로 등)에서 제품 정보를 크롤링합니다.
+// 여러 소스(오하우스, 자재로, 한글중문, 이안몰 등)에서 제품 정보를 크롤링합니다.
 
 import { NextRequest } from 'next/server';
 import {
@@ -8,6 +8,8 @@ import {
     CRAWLER_SOURCES,
     ohouseCrawler,
     zzroCrawler,
+    hangelCrawler,
+    ianmallCrawler,
     CrawlProgress,
 } from '@/lib/crawlers';
 
@@ -22,10 +24,10 @@ export async function POST(request: NextRequest) {
                 const { source, categoryIds } = body;
 
                 // 소스 검증
-                if (!source || !['ohouse', 'zzro'].includes(source)) {
+                if (!source || !['ohouse', 'zzro', 'hangel', 'ianmall'].includes(source)) {
                     controller.enqueue(encoder.encode(JSON.stringify({
                         type: 'error',
-                        message: '크롤링 소스를 선택해주세요. (ohouse 또는 zzro)',
+                        message: '크롤링 소스를 선택해주세요. (ohouse, zzro, hangel, ianmall)',
                     }) + '\n'));
                     controller.close();
                     return;
@@ -51,6 +53,20 @@ export async function POST(request: NextRequest) {
                 } else if (source === 'zzro') {
                     // 자재로 크롤링
                     const generator = zzroCrawler.crawlAll(categoryIds);
+
+                    for await (const progress of generator) {
+                        controller.enqueue(encoder.encode(JSON.stringify(progress) + '\n'));
+                    }
+                } else if (source === 'hangel') {
+                    // 한글 중문 크롤링
+                    const generator = hangelCrawler.crawlAll(categoryIds);
+
+                    for await (const progress of generator) {
+                        controller.enqueue(encoder.encode(JSON.stringify(progress) + '\n'));
+                    }
+                } else if (source === 'ianmall') {
+                    // 이안몰 크롤링
+                    const generator = ianmallCrawler.crawlAll(categoryIds);
 
                     for await (const progress of generator) {
                         controller.enqueue(encoder.encode(JSON.stringify(progress) + '\n'));
@@ -85,3 +101,4 @@ export async function GET() {
         sources: CRAWLER_SOURCES,
     });
 }
+

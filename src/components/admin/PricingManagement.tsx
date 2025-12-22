@@ -26,6 +26,9 @@ export default function PricingManagement({ isDemoMode }: PricingManagementProps
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [saving, setSaving] = useState(false);
 
+    // 검색 상태
+    const [searchQuery, setSearchQuery] = useState('');
+
     // 데이터 조회
     const fetchPricing = async () => {
         try {
@@ -202,13 +205,37 @@ export default function PricingManagement({ isDemoMode }: PricingManagementProps
                     </button>
                 </div>
 
-                <button
-                    onClick={handleAdd}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2"
-                >
-                    <span>+</span>
-                    <span>추가</span>
-                </button>
+                <div className="flex items-center gap-3">
+                    {/* 검색바 */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="항목 검색... (예: 세면수전)"
+                            className="w-64 px-4 py-2 pl-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            🔍
+                        </span>
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={handleAdd}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2"
+                    >
+                        <span>+</span>
+                        <span>추가</span>
+                    </button>
+                </div>
             </div>
 
             {/* 데모 모드 안내 */}
@@ -224,6 +251,7 @@ export default function PricingManagement({ isDemoMode }: PricingManagementProps
                     data={laborCosts}
                     onEdit={handleEdit}
                     onDelete={(id) => handleDelete('labor', id)}
+                    searchQuery={searchQuery}
                 />
             )}
 
@@ -234,6 +262,7 @@ export default function PricingManagement({ isDemoMode }: PricingManagementProps
                     onEdit={handleEdit}
                     onDelete={(id) => handleDelete('material', id)}
                     onBulkUpdate={handleBulkUpdate}
+                    searchQuery={searchQuery}
                 />
             )}
 
@@ -243,6 +272,7 @@ export default function PricingManagement({ isDemoMode }: PricingManagementProps
                     data={compositeCosts}
                     onEdit={handleEdit}
                     onDelete={(id) => handleDelete('composite', id)}
+                    searchQuery={searchQuery}
                 />
             )}
 

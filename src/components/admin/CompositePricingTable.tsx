@@ -8,9 +8,10 @@ interface CompositePricingTableProps {
     data: CompositeCost[];
     onEdit: (item: CompositeCost) => void;
     onDelete: (id: string) => void;
+    searchQuery?: string;
 }
 
-export default function CompositePricingTable({ data, onEdit, onDelete }: CompositePricingTableProps) {
+export default function CompositePricingTable({ data, onEdit, onDelete, searchQuery = '' }: CompositePricingTableProps) {
     const [page, setPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -21,11 +22,39 @@ export default function CompositePricingTable({ data, onEdit, onDelete }: Compos
         return cats.sort();
     }, [data]);
 
-    // 필터링된 데이터
+    // 필터링된 데이터 (검색 + 카테고리)
     const filteredData = useMemo(() => {
-        if (categoryFilter === 'all') return data;
-        return data.filter(c => c.category === categoryFilter);
-    }, [data, categoryFilter]);
+        let filtered = data;
+
+        // 검색어 필터
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(c =>
+                c.cost_name.toLowerCase().includes(query) ||
+                c.category.toLowerCase().includes(query) ||
+                (c.description?.toLowerCase() || '').includes(query)
+            );
+        }
+
+        // 카테고리 필터
+        if (categoryFilter !== 'all') {
+            filtered = filtered.filter(c => c.category === categoryFilter);
+        }
+
+        // 정렬: 대표 항목 등급이 있는 항목을 먼저 표시
+        filtered = [...filtered].sort((a, b) => {
+            const gradeOrder = { '기본': 1, '중급': 2, '고급': 3 };
+            const aHasGrade = a.representative_grade ? gradeOrder[a.representative_grade as keyof typeof gradeOrder] || 0 : 0;
+            const bHasGrade = b.representative_grade ? gradeOrder[b.representative_grade as keyof typeof gradeOrder] || 0 : 0;
+
+            if (aHasGrade && !bHasGrade) return -1;
+            if (!aHasGrade && bHasGrade) return 1;
+            if (aHasGrade && bHasGrade) return aHasGrade - bHasGrade;
+            return 0;
+        });
+
+        return filtered;
+    }, [data, categoryFilter, searchQuery]);
 
     // 페이지네이션된 데이터
     const paginatedData = useMemo(() => {
@@ -54,8 +83,8 @@ export default function CompositePricingTable({ data, onEdit, onDelete }: Compos
                 <button
                     onClick={() => handleFilterChange('all')}
                     className={`px-3 py-1.5 text-xs rounded-full transition-colors ${categoryFilter === 'all'
-                            ? 'bg-white text-gray-900 font-medium'
-                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                        ? 'bg-white text-gray-900 font-medium'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
                         }`}
                 >
                     전체 ({data.length})
@@ -65,8 +94,8 @@ export default function CompositePricingTable({ data, onEdit, onDelete }: Compos
                         key={cat}
                         onClick={() => handleFilterChange(cat)}
                         className={`px-3 py-1.5 text-xs rounded-full transition-colors ${categoryFilter === cat
-                                ? 'bg-white text-gray-900 font-medium'
-                                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                            ? 'bg-white text-gray-900 font-medium'
+                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
                             }`}
                     >
                         {cat} ({data.filter(c => c.category === cat).length})
@@ -80,8 +109,8 @@ export default function CompositePricingTable({ data, onEdit, onDelete }: Compos
                     <thead className="bg-white/5 border-b border-white/10">
                         <tr>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300 w-12">#</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">비용명</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">카테고리</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">비용명</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">설명</th>
                             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">단가</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">단위</th>
@@ -95,8 +124,17 @@ export default function CompositePricingTable({ data, onEdit, onDelete }: Compos
                                 <td className="px-4 py-3 text-center text-gray-500 text-sm">
                                     {(page - 1) * itemsPerPage + index + 1}
                                 </td>
-                                <td className="px-4 py-3 text-white font-medium">{composite.cost_name}</td>
                                 <td className="px-4 py-3 text-gray-400">{composite.category}</td>
+                                <td className="px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white font-medium">{composite.cost_name}</span>
+                                        {composite.representative_grade && (
+                                            <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded whitespace-nowrap">
+                                                {composite.representative_grade}대표
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
                                 <td className="px-4 py-3 text-gray-400 text-sm max-w-xs truncate">
                                     {composite.description || '-'}
                                 </td>

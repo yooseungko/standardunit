@@ -10,9 +10,10 @@ interface MaterialPricingTableProps {
     onEdit: (item: MaterialPrice) => void;
     onDelete: (id: string) => void;
     onBulkUpdate?: (ids: string[], updates: Partial<MaterialPrice>) => void;
+    searchQuery?: string;
 }
 
-export default function MaterialPricingTable({ data, onEdit, onDelete, onBulkUpdate }: MaterialPricingTableProps) {
+export default function MaterialPricingTable({ data, onEdit, onDelete, onBulkUpdate, searchQuery = '' }: MaterialPricingTableProps) {
     const [page, setPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -66,16 +67,43 @@ export default function MaterialPricingTable({ data, onEdit, onDelete, onBulkUpd
     const filteredData = useMemo(() => {
         let filtered = data;
 
+        // 검색어 필터
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(m =>
+                m.product_name.toLowerCase().includes(query) ||
+                (m.brand?.toLowerCase() || '').includes(query) ||
+                m.category.toLowerCase().includes(query) ||
+                (m.sub_category?.toLowerCase() || '').includes(query)
+            );
+        }
+
+        // 카테고리 필터
         if (categoryFilter !== 'all') {
             filtered = filtered.filter(m => m.category === categoryFilter);
         }
 
+        // 세부 카테고리 필터
         if (subCategoryFilter !== 'all') {
             filtered = filtered.filter(m => m.sub_category === subCategoryFilter);
         }
 
+        // 정렬: 대표 항목 등급이 있는 항목을 먼저 표시
+        filtered = [...filtered].sort((a, b) => {
+            const gradeOrder = { '기본': 1, '중급': 2, '고급': 3 };
+            const aHasGrade = a.representative_grade ? gradeOrder[a.representative_grade as keyof typeof gradeOrder] || 0 : 0;
+            const bHasGrade = b.representative_grade ? gradeOrder[b.representative_grade as keyof typeof gradeOrder] || 0 : 0;
+
+            // 대표 항목이 있는 것이 먼저
+            if (aHasGrade && !bHasGrade) return -1;
+            if (!aHasGrade && bHasGrade) return 1;
+            // 둘 다 대표 항목이면 등급순
+            if (aHasGrade && bHasGrade) return aHasGrade - bHasGrade;
+            return 0;
+        });
+
         return filtered;
-    }, [data, categoryFilter, subCategoryFilter]);
+    }, [data, categoryFilter, subCategoryFilter, searchQuery]);
 
     // 페이지네이션된 데이터
     const paginatedData = useMemo(() => {
@@ -391,7 +419,16 @@ export default function MaterialPricingTable({ data, onEdit, onDelete, onBulkUpd
                                         <span className="text-gray-500 text-xs"> &gt; {material.sub_category}</span>
                                     )}
                                 </td>
-                                <td className="px-4 py-3 text-white">{material.product_name}</td>
+                                <td className="px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white">{material.product_name}</span>
+                                        {material.representative_grade && (
+                                            <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded whitespace-nowrap">
+                                                {material.representative_grade}대표
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
                                 <td className="px-4 py-3 text-gray-400">{material.brand || '-'}</td>
                                 <td className="px-4 py-3 text-center text-gray-400 text-xs">
                                     {material.size || '-'}

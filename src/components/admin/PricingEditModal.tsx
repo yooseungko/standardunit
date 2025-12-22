@@ -84,6 +84,23 @@ export default function PricingEditModal({ tab, item, onClose, onSave, saving }:
                                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
                                 />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                    ⭐ 대표 항목 등급
+                                    <span className="ml-2 text-xs text-gray-500">(견적서 작성 시 기본 선택됨)</span>
+                                </label>
+                                <select
+                                    name="representative_grade"
+                                    value={(formData.representative_grade as string) || ''}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
+                                >
+                                    <option value="">선택 안함</option>
+                                    <option value="기본">기본 등급 대표</option>
+                                    <option value="중급">중급 등급 대표</option>
+                                    <option value="고급">고급 등급 대표</option>
+                                </select>
+                            </div>
                         </>
                     )}
 
@@ -191,6 +208,23 @@ export default function PricingEditModal({ tab, item, onClose, onSave, saving }:
                                     />
                                 </div>
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                    ⭐ 대표 항목 등급
+                                    <span className="ml-2 text-xs text-gray-500">(견적서 작성 시 기본 선택됨)</span>
+                                </label>
+                                <select
+                                    name="representative_grade"
+                                    value={(formData.representative_grade as string) || ''}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
+                                >
+                                    <option value="">선택 안함</option>
+                                    <option value="기본">기본 등급 대표</option>
+                                    <option value="중급">중급 등급 대표</option>
+                                    <option value="고급">고급 등급 대표</option>
+                                </select>
+                            </div>
                         </>
                     )}
 
@@ -297,6 +331,23 @@ export default function PricingEditModal({ tab, item, onClose, onSave, saving }:
                                     placeholder="예: 보통 32평 기준 전체 철거 시 3~4톤 발생"
                                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                    ⭐ 대표 항목 등급
+                                    <span className="ml-2 text-xs text-gray-500">(견적서 작성 시 기본 선택됨)</span>
+                                </label>
+                                <select
+                                    name="representative_grade"
+                                    value={(formData.representative_grade as string) || ''}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/30"
+                                >
+                                    <option value="">선택 안함</option>
+                                    <option value="기본">기본 등급 대표</option>
+                                    <option value="중급">중급 등급 대표</option>
+                                    <option value="고급">고급 등급 대표</option>
+                                </select>
                             </div>
                         </>
                     )}

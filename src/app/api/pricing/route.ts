@@ -189,10 +189,12 @@ export async function POST(request: NextRequest) {
                                 daily_rate: data.daily_rate,
                                 hourly_rate: data.hourly_rate,
                                 notes: data.notes,
+                                representative_grade: data.representative_grade || null,
                             })
                             .eq('id', data.id)
                             .select()
                             .single();
+
 
                         if (error) throw error;
                         result = updated;
@@ -207,6 +209,7 @@ export async function POST(request: NextRequest) {
                                 daily_rate: data.daily_rate,
                                 hourly_rate: data.hourly_rate,
                                 notes: data.notes,
+                                representative_grade: data.representative_grade || null,
                             })
                             .select()
                             .single();
@@ -235,6 +238,7 @@ export async function POST(request: NextRequest) {
                                 source_url: data.source_url,
                                 notes: data.notes,
                                 is_verified: data.is_verified,
+                                representative_grade: data.representative_grade || null,
                             })
                             .eq('id', data.id)
                             .select()
@@ -259,6 +263,7 @@ export async function POST(request: NextRequest) {
                                 source: data.source,
                                 source_url: data.source_url,
                                 notes: data.notes,
+                                representative_grade: data.representative_grade || null,
                             })
                             .select()
                             .single();
@@ -287,6 +292,7 @@ export async function POST(request: NextRequest) {
                                 min_quantity: data.min_quantity,
                                 calculation_notes: data.calculation_notes,
                                 notes: data.notes,
+                                representative_grade: data.representative_grade || null,
                             })
                             .eq('id', data.id)
                             .select()
@@ -312,6 +318,7 @@ export async function POST(request: NextRequest) {
                                 min_quantity: data.min_quantity,
                                 calculation_notes: data.calculation_notes,
                                 notes: data.notes,
+                                representative_grade: data.representative_grade || null,
                             })
                             .select()
                             .single();

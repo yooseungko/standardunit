@@ -2,6 +2,9 @@
 // 단가 관리 시스템 타입 정의
 // ============================================
 
+// 대표 항목 등급 타입
+export type RepresentativeGrade = '기본' | '중급' | '고급' | null;
+
 // 인건비 (Labor Costs)
 export interface LaborCost {
   id: string;
@@ -13,6 +16,7 @@ export interface LaborCost {
   min_work_hours?: number; // 최소 작업 시간
   overtime_rate?: number; // 연장근무 할증률
   notes?: string | null;
+  representative_grade?: RepresentativeGrade; // 대표 항목 등급 (기본/중급/고급)
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -51,6 +55,7 @@ export interface MaterialPrice {
   source?: string | null;
   source_url?: string | null;
   notes?: string | null;
+  representative_grade?: RepresentativeGrade; // 대표 항목 등급 (기본/중급/고급)
   is_active: boolean;
   is_verified: boolean;
   created_at: string;
@@ -74,6 +79,7 @@ export interface CompositeCost {
   min_quantity?: number | null;
   calculation_notes?: string | null;
   notes?: string | null;
+  representative_grade?: RepresentativeGrade; // 대표 항목 등급 (기본/중급/고급)
   is_active: boolean;
   created_at: string;
   updated_at: string;

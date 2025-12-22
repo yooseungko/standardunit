@@ -18,7 +18,7 @@ interface CrawledProduct {
 }
 
 // 크롤러 소스 타입
-type CrawlerSource = "ohouse" | "zzro";
+type CrawlerSource = "ohouse" | "zzro" | "hangel" | "ianmall";
 
 // 카테고리 정보
 interface CategoryInfo {
@@ -257,6 +257,31 @@ const ZZRO_CATEGORY_GROUPS: CategoryGroup[] = [
     },
 ];
 
+// 한글 중문 카테고리
+const HANGEL_CATEGORY_GROUPS: CategoryGroup[] = [
+    {
+        groupName: "중문",
+        categories: [
+            {
+                id: 84, name: "중문 전체", children: [
+                    { id: 86, name: "양개중문" },
+                    { id: 1396, name: "슬림 여닫이 중문" },
+                    { id: 1205, name: "스윙 중문" },
+                    { id: 1398, name: "연동중문" },
+                    { id: 1291, name: "3연동 중문" },
+                    { id: 1289, name: "4연동 중문" },
+                    { id: 1290, name: "6연동 중문" },
+                    { id: 89, name: "원슬라이딩 중문" },
+                    { id: 87, name: "미서기 중문" },
+                    { id: 1399, name: "간살중문" },
+                    { id: 1206, name: "프레임리스 중문" },
+                    { id: 691, name: "중문+파티션" },
+                ]
+            },
+        ]
+    },
+];
+
 
 // 크롤러 소스 정보
 const CRAWLER_SOURCES = [
@@ -275,6 +300,29 @@ const CRAWLER_SOURCES = [
         description: "목자재, 타일, 수전, 도어, 부자재, 조명, 철물 등",
         icon: "🔧",
         categoryGroups: ZZRO_CATEGORY_GROUPS,
+    },
+    {
+        id: "hangel" as const,
+        name: "한글 중문",
+        url: "https://hangel.co.kr",
+        description: "양개중문, 연동중문, 스윙중문, 미서기중문 등 중문 전문",
+        icon: "🚪",
+        categoryGroups: HANGEL_CATEGORY_GROUPS,
+    },
+    {
+        id: "ianmall" as const,
+        name: "이안몰",
+        url: "https://ian-mall.kr",
+        description: "싱크볼, 주방수전, 주방용품 전문",
+        icon: "🚰",
+        categoryGroups: [
+            {
+                groupName: "주방",
+                categories: [
+                    { id: 993, name: "싱크볼", productCount: 0, children: [] },
+                ]
+            },
+        ],
     },
 ];
 
@@ -673,9 +721,13 @@ export default function PriceCrawler() {
                                             <td className="px-4 py-3">
                                                 <span className={`text-xs px-2 py-1 rounded ${product.source === 'ohouse'
                                                     ? 'bg-green-500/20 text-green-400'
-                                                    : 'bg-blue-500/20 text-blue-400'
+                                                    : product.source === 'hangel'
+                                                        ? 'bg-purple-500/20 text-purple-400'
+                                                        : product.source === 'ianmall'
+                                                            ? 'bg-orange-500/20 text-orange-400'
+                                                            : 'bg-blue-500/20 text-blue-400'
                                                     }`}>
-                                                    {product.source === 'ohouse' ? '오하우스' : '자재로'}
+                                                    {product.source === 'ohouse' ? '오하우스' : product.source === 'hangel' ? '한글중문' : product.source === 'ianmall' ? '이안몰' : '자재로'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
