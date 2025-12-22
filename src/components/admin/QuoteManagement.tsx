@@ -279,6 +279,16 @@ export default function QuoteManagement() {
                                                 >
                                                     🗑️
                                                 </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.open(`/q/${quote.id}`, '_blank');
+                                                    }}
+                                                    className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-lg transition-colors"
+                                                    title="웹뷰 미리보기"
+                                                >
+                                                    🔍
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

@@ -261,7 +261,6 @@ export default function QuoteViewPage() {
                     <h3 className="text-white font-bold mb-2">📌 안내사항</h3>
                     <ul className="space-y-1 list-disc list-inside">
                         <li>본 견적서는 {quote.valid_until || "발행일로부터 14일"}까지 유효합니다.</li>
-                        <li>현장 상황에 따라 금액이 변동될 수 있습니다.</li>
                         <li>자세한 상담이 필요하시면 연락 주세요.</li>
                     </ul>
                 </div>
