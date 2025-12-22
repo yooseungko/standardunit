@@ -8,9 +8,10 @@ import MarketPricingManagement from "@/components/admin/MarketPricingManagement"
 import QuoteGenerationProcess from "@/components/admin/QuoteGenerationProcess";
 import QuoteManagement from "@/components/admin/QuoteManagement";
 import PriceCrawler from "@/components/admin/PriceCrawler";
+import ContractManagement from "@/components/admin/ContractManagement";
 
 // 탭 타입
-type AdminTab = 'requests' | 'analysis' | 'pricing' | 'market-pricing' | 'quotes' | 'crawler';
+type AdminTab = 'requests' | 'analysis' | 'pricing' | 'market-pricing' | 'quotes' | 'contracts' | 'crawler';
 
 interface EstimateRequest {
     id: number;
@@ -350,12 +351,6 @@ export default function AdminPage() {
                     </div>
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={fetchEstimates}
-                            className="text-sm font-mono text-gray-400 hover:text-white transition-colors"
-                        >
-                            새로고침
-                        </button>
-                        <button
                             onClick={handleLogout}
                             className="text-sm text-gray-500 hover:text-white transition-colors"
                         >
@@ -376,7 +371,7 @@ export default function AdminPage() {
                                 : 'border-transparent text-gray-500 hover:text-gray-300'
                                 }`}
                         >
-                            견적 요청
+                            📨 견적 요청
                         </button>
                         <button
                             onClick={() => setActiveTab('analysis')}
@@ -415,13 +410,22 @@ export default function AdminPage() {
                             📑 견적서 관리
                         </button>
                         <button
+                            onClick={() => setActiveTab('contracts')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'contracts'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            ✍️ 계약 관리
+                        </button>
+                        <button
                             onClick={() => setActiveTab('crawler')}
                             className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'crawler'
                                 ? 'border-white text-white'
                                 : 'border-transparent text-gray-500 hover:text-gray-300'
                                 }`}
                         >
-                            🕷️ 가격 크롤링
+                            ⚙️ 관리자 기능
                         </button>
                     </nav>
                 </div>
@@ -452,6 +456,8 @@ export default function AdminPage() {
                     <MarketPricingManagement isDemoMode={isDemoMode} />
                 ) : activeTab === 'quotes' ? (
                     <QuoteManagement />
+                ) : activeTab === 'contracts' ? (
+                    <ContractManagement />
                 ) : activeTab === 'crawler' ? (
                     <PriceCrawler />
                 ) : (

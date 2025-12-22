@@ -104,6 +104,34 @@ export default function QuoteManagement() {
         }
     };
 
+    // 견적 확정 (상태를 confirmed로 변경)
+    const handleConfirmQuote = async (quoteId: string) => {
+        if (!confirm('이 견적서를 확정하시곊습니까?\n확정된 견적은 계약 관리 탭에서 계약을 진행할 수 있습니다.')) return;
+
+        try {
+            const response = await fetch('/api/quotes', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: quoteId,
+                    status: 'confirmed',
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ 견적이 확정되었습니다!');
+                fetchQuotes();
+            } else {
+                alert('확정 실패: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Confirm error:', error);
+            alert('견적 확정 중 오류가 발생했습니다.');
+        }
+    };
+
     // 금액 포맷
     const formatMoney = (amount: number) => {
         return new Intl.NumberFormat('ko-KR').format(amount);
@@ -289,6 +317,18 @@ export default function QuoteManagement() {
                                                 >
                                                     🔍
                                                 </button>
+                                                {quote.status !== 'confirmed' && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleConfirmQuote(quote.id);
+                                                        }}
+                                                        className="px-3 py-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 text-sm rounded-lg transition-colors"
+                                                        title="견적 확정"
+                                                    >
+                                                        ✅ 확정
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
