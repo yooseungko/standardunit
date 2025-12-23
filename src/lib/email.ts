@@ -231,7 +231,7 @@ export async function sendStyleboardEmail(data: {
 
     try {
         const { error } = await resend.emails.send({
-            from: EMAIL_FROM,
+            from: '스탠다드 유닛 <noreply@standardunit.kr>', // 하드코딩 - 환경변수 의존성 제거
             to: data.customerEmail, // 도메인 인증 완료 - 고객 이메일로 발송
             subject: `[Standard Unit] ${data.customerName}님, 스타일보드가 준비되었습니다`,
             html: `
