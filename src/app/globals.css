@@ -175,6 +175,16 @@
   .animate-scroll-up {
     animation: scroll-up 15s linear infinite;
   }
+
+  /* Scrollbar Hide */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ===== REDUCED MOTION ===== */

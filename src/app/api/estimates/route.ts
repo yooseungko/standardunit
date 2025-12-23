@@ -135,11 +135,12 @@ export async function GET() {
                 );
             }
 
-            return NextResponse.json({ data, isSupabaseConfigured: true });
+            return NextResponse.json({ success: true, data, isSupabaseConfigured: true });
         }
 
         // Supabase 없을 때 - 로컬 메모리에서 조회
         return NextResponse.json({
+            success: true,
             data: localEstimates,
             isSupabaseConfigured: false,
             message: 'Supabase가 설정되지 않았습니다. 데모 모드로 실행 중입니다.'

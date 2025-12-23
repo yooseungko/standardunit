@@ -211,6 +211,133 @@ export async function sendAdminNotification(estimate: {
     }
 }
 
+// 스타일보드 링크 이메일 발송
+export async function sendStyleboardEmail(data: {
+    customerName: string;
+    customerEmail: string;
+    complexName: string;
+    size: string;
+    styleboardLink: string;
+    password: string;
+}): Promise<{ success: boolean; error?: string }> {
+    console.log('sendStyleboardEmail called for:', data.customerName);
+
+    if (!resend) {
+        console.log('Resend not configured, skipping styleboard email');
+        return { success: false, error: 'Email not configured' };
+    }
+
+    const sizeLabel = sizeLabels[data.size] || `${data.size}평`;
+
+    try {
+        const { error } = await resend.emails.send({
+            from: EMAIL_FROM,
+            to: data.customerEmail, // 도메인 인증 완료 - 고객 이메일로 발송
+            subject: `[Standard Unit] ${data.customerName}님, 스타일보드가 준비되었습니다`,
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #ffffff; padding: 40px 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: #111111; border-radius: 16px; overflow: hidden; border: 1px solid #222; }
+        .header { background: #000000; padding: 32px; text-align: center; border-bottom: 1px solid #222; }
+        .logo { font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
+        .header p { margin: 8px 0 0; color: #888; font-size: 14px; }
+        .badge { display: inline-block; background: #8b5cf6; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 16px; }
+        .content { padding: 32px; }
+        .greeting { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 16px; }
+        .description { color: #aaa; line-height: 1.6; margin-bottom: 24px; }
+        .info-box { background: #1a1a1a; border-radius: 12px; padding: 20px; border: 1px solid #333; margin-bottom: 24px; }
+        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #888; font-size: 14px; }
+        .info-value { color: #fff; font-weight: 500; font-size: 14px; }
+        .password-box { background: linear-gradient(135deg, #8b5cf6, #6d28d9); padding: 24px; border-radius: 12px; text-align: center; margin-bottom: 24px; }
+        .password-label { color: rgba(255,255,255,0.8); font-size: 12px; margin-bottom: 8px; }
+        .password-value { font-size: 32px; font-weight: 800; color: #fff; font-family: monospace; letter-spacing: 4px; }
+        .cta-button { display: block; background: #fff; color: #000; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; text-align: center; margin-bottom: 16px; }
+        .cta-button:hover { background: #f0f0f0; }
+        .link-box { background: #1a1a1a; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; }
+        .link-url { color: #8b5cf6; font-size: 12px; word-break: break-all; }
+        .footer { background: #0d0d0d; padding: 24px; text-align: center; border-top: 1px solid #222; }
+        .footer p { margin: 0; color: #666; font-size: 12px; }
+        .footer a { color: #8b5cf6; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Standard Unit</div>
+            <p>인테리어 스타일보드</p>
+            <span class="badge">🎨 스타일 선택 요청</span>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">${data.customerName}님, 안녕하세요!</div>
+            <p class="description">
+                스탠다드 유닛을 선택해 주셔서 감사합니다.<br>
+                아래 링크에서 원하시는 인테리어 스타일을 선택해 주세요.<br>
+                선택하신 이미지를 바탕으로 맞춤 상담을 진행해 드리겠습니다.
+            </p>
+            
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">단지명</span>
+                    <span class="info-value">${data.complexName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">평형</span>
+                    <span class="info-value">${sizeLabel}</span>
+                </div>
+            </div>
+            
+            <div class="password-box">
+                <div class="password-label">접속 비밀번호</div>
+                <div class="password-value">${data.password}</div>
+            </div>
+            
+            <p style="color: #fff; font-size: 15px; text-align: center; margin-bottom: 16px;">
+                스타일보드에서 공간 취향을 찾아보세요
+            </p>
+            <a href="${data.styleboardLink}" class="cta-button">🏠 내 취향 찾기</a>
+            
+            <div class="link-box">
+                <span class="info-label">접속 링크</span>
+                <div class="link-url">${data.styleboardLink}</div>
+            </div>
+            
+            <p style="color: #888; font-size: 13px; line-height: 1.6;">
+                💡 스타일보드에서 각 공간별로 마음에 드는 이미지를 최대 5장씩 선택해 주세요.<br>
+                선택이 완료되면 저장 버튼을 눌러주시면 됩니다.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>문의사항이 있으시면 언제든 연락주세요.</p>
+            <p style="margin-top: 8px;"><a href="https://open.kakao.com/o/sLPdwe7h">카카오톡 상담하기</a></p>
+            <p style="margin-top: 16px; color: #444;">© Standard Unit</p>
+        </div>
+    </div>
+</body>
+</html>
+            `,
+        });
+
+        if (error) {
+            console.error('Styleboard email error:', error);
+            return { success: false, error: error.message };
+        }
+
+        console.log('Styleboard email sent successfully');
+        return { success: true };
+    } catch (error) {
+        console.error('Styleboard email error:', error);
+        return { success: false, error: String(error) };
+    }
+}
+
 // 공정별 비용 데이터 (평형별, 등급별)
 export interface WorkItemCost {
     name: string;

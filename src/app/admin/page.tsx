@@ -9,9 +9,10 @@ import QuoteGenerationProcess from "@/components/admin/QuoteGenerationProcess";
 import QuoteManagement from "@/components/admin/QuoteManagement";
 import PriceCrawler from "@/components/admin/PriceCrawler";
 import ContractManagement from "@/components/admin/ContractManagement";
+import StyleboardManagement from "@/components/admin/StyleboardManagement";
 
 // 탭 타입
-type AdminTab = 'requests' | 'analysis' | 'pricing' | 'market-pricing' | 'quotes' | 'contracts' | 'crawler';
+type AdminTab = 'requests' | 'analysis' | 'pricing' | 'market-pricing' | 'quotes' | 'contracts' | 'styleboard' | 'crawler';
 
 interface EstimateRequest {
     id: number;
@@ -419,6 +420,15 @@ export default function AdminPage() {
                             ✍️ 계약 관리
                         </button>
                         <button
+                            onClick={() => setActiveTab('styleboard')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'styleboard'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            🎨 스타일보드
+                        </button>
+                        <button
                             onClick={() => setActiveTab('crawler')}
                             className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'crawler'
                                 ? 'border-white text-white'
@@ -458,6 +468,8 @@ export default function AdminPage() {
                     <QuoteManagement />
                 ) : activeTab === 'contracts' ? (
                     <ContractManagement />
+                ) : activeTab === 'styleboard' ? (
+                    <StyleboardManagement />
                 ) : activeTab === 'crawler' ? (
                     <PriceCrawler />
                 ) : (
