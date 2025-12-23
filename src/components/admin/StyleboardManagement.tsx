@@ -498,6 +498,7 @@ function StyleboardDetailModal({
     };
 
     const selectedImages = styleboard.selected_images || {};
+    const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -584,7 +585,8 @@ function StyleboardDetailModal({
                                                             {images.map((imagePath, idx) => (
                                                                 <div
                                                                     key={idx}
-                                                                    className="aspect-square rounded-lg overflow-hidden border border-white/10"
+                                                                    className="aspect-square rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+                                                                    onClick={() => setEnlargedImage(imagePath)}
                                                                 >
                                                                     <img
                                                                         src={imagePath}
@@ -626,6 +628,29 @@ function StyleboardDetailModal({
                     </button>
                 </div>
             </div>
+
+            {/* 이미지 확대 모달 */}
+            {enlargedImage && (
+                <div
+                    className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4"
+                    onClick={() => setEnlargedImage(null)}
+                >
+                    <button
+                        className="absolute top-4 right-4 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                        onClick={() => setEnlargedImage(null)}
+                    >
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <img
+                        src={enlargedImage}
+                        alt="확대 이미지"
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
         </div>
     );
 }
@@ -731,10 +756,10 @@ function CustomerRow({
                             onClick={handleSendEmail}
                             disabled={isSending || sendingLink}
                             className={`px-3 py-1 text-xs rounded font-medium transition-colors ${isSending || sendingLink
-                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                    : styleboard.link_sent
-                                        ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                                        : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                : styleboard.link_sent
+                                    ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                                    : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
                                 }`}
                         >
                             {isSending ? '발송중...' : styleboard.link_sent ? '재발송' : '발송'}
@@ -745,8 +770,8 @@ function CustomerRow({
                         onClick={handleCreateAndSend}
                         disabled={creating || isCreating}
                         className={`px-3 py-1 text-xs rounded font-medium transition-colors ${creating || isCreating
-                                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                             }`}
                     >
                         {isCreating ? '생성중...' : '생성하기'}
