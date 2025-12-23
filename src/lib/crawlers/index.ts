@@ -6,12 +6,14 @@ export * from './ohouse';
 export * from './zzro';
 export * from './hangel';
 export * from './ianmall';
+export * from './symembership';
 
 // 크롤러 레지스트리
 import { ohouseCrawler, OhouseCrawler, OHOUSE_CATEGORIES, OHOUSE_PARENT_CATEGORIES } from './ohouse';
 import { zzroCrawler, ZzroCrawler, ZZRO_CATEGORIES, ZZRO_PARENT_CATEGORIES } from './zzro';
 import { hangelCrawler, HangelCrawler, HANGEL_CATEGORIES, HANGEL_PARENT_CATEGORIES } from './hangel';
 import { ianmallCrawler, IanmallCrawler, IANMALL_CATEGORIES, IANMALL_PARENT_CATEGORIES } from './ianmall';
+import { symembershipCrawler, SymembershipCrawler, SYMEMBERSHIP_CATEGORIES, SYMEMBERSHIP_PARENT_CATEGORIES } from './symembership';
 import type { ICrawler, CategoryInfo } from './types';
 
 // 사용 가능한 크롤러 목록
@@ -20,6 +22,7 @@ export const CRAWLERS = {
     zzro: zzroCrawler,
     hangel: hangelCrawler,
     ianmall: ianmallCrawler,
+    symembership: symembershipCrawler,
 } as const;
 
 export type CrawlerType = keyof typeof CRAWLERS;
@@ -64,6 +67,14 @@ export const CRAWLER_SOURCES = [
         categories: IANMALL_CATEGORIES,
         parentCategories: IANMALL_PARENT_CATEGORIES,
     },
+    {
+        id: 'symembership' as const,
+        name: '에스와이',
+        url: 'https://symembership.com',
+        description: '하츠, 파세코 등 주방후드, 쿡탑, 환풍기 전문',
+        categories: SYMEMBERSHIP_CATEGORIES,
+        parentCategories: SYMEMBERSHIP_PARENT_CATEGORIES,
+    },
 ];
 
 // 특정 소스의 카테고리 가져오기
@@ -77,6 +88,8 @@ export function getCategoriesBySource(source: CrawlerType): Record<string | numb
             return HANGEL_CATEGORIES;
         case 'ianmall':
             return IANMALL_CATEGORIES;
+        case 'symembership':
+            return SYMEMBERSHIP_CATEGORIES;
         default:
             return {};
     }
@@ -93,6 +106,8 @@ export function getParentCategoriesBySource(source: CrawlerType): Record<string 
             return HANGEL_PARENT_CATEGORIES;
         case 'ianmall':
             return IANMALL_PARENT_CATEGORIES;
+        case 'symembership':
+            return SYMEMBERSHIP_PARENT_CATEGORIES;
         default:
             return {};
     }

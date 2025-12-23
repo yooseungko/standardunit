@@ -18,7 +18,7 @@ interface CrawledProduct {
 }
 
 // 크롤러 소스 타입
-type CrawlerSource = "ohouse" | "zzro" | "hangel" | "ianmall";
+type CrawlerSource = "ohouse" | "zzro" | "hangel" | "ianmall" | "symembership";
 
 // 카테고리 정보
 interface CategoryInfo {
@@ -330,6 +330,45 @@ const CRAWLER_SOURCES = [
             },
         ],
     },
+    {
+        id: "symembership" as const,
+        name: "에스와이",
+        url: "https://symembership.com",
+        description: "하츠, 파세코 등 주방후드, 쿡탑 전문",
+        icon: "🌬️",
+        categoryGroups: [
+            {
+                groupName: "하츠",
+                categories: [
+                    { id: 80, name: "주방후드", children: [] },
+                    { id: 145, name: "쿡탑", children: [] },
+                    { id: 144, name: "싱크볼", children: [] },
+                    { id: 79, name: "주방수전", children: [] },
+                    { id: 141, name: "욕실환풍기", children: [] },
+                ]
+            },
+            {
+                groupName: "파세코",
+                categories: [
+                    { id: 85, name: "주방후드", children: [] },
+                    { id: 86, name: "쿡탑", children: [] },
+                ]
+            },
+            {
+                groupName: "트라이애드",
+                categories: [
+                    { id: 97, name: "주방후드", children: [] },
+                    { id: 98, name: "쿡탑", children: [] },
+                ]
+            },
+            {
+                groupName: "엠시스",
+                categories: [
+                    { id: 131, name: "주방후드", children: [] },
+                ]
+            },
+        ],
+    },
 ];
 
 export default function PriceCrawler() {
@@ -555,26 +594,25 @@ export default function PriceCrawler() {
             </div>
 
             {/* 크롤러 소스 선택 */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                <h3 className="text-white font-medium mb-4">📦 크롤링 소스 선택</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <h3 className="text-white font-medium mb-3 text-sm">📦 크롤링 소스 선택</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                     {CRAWLER_SOURCES.map(source => (
                         <button
                             key={source.id}
                             onClick={() => setSelectedSource(source.id)}
-                            className={`p-4 rounded-lg border-2 transition-all text-left ${selectedSource === source.id
+                            className={`p-2 rounded-lg border transition-all text-left ${selectedSource === source.id
                                 ? "border-blue-500 bg-blue-500/10"
                                 : "border-white/10 hover:border-white/30"
                                 }`}
                         >
-                            <div className="flex items-center gap-3">
-                                <span className="text-2xl">{source.icon}</span>
-                                <div>
-                                    <span className={`font-medium ${selectedSource === source.id ? "text-blue-400" : "text-white"}`}>
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg">{source.icon}</span>
+                                <div className="min-w-0">
+                                    <span className={`font-medium text-sm block truncate ${selectedSource === source.id ? "text-blue-400" : "text-white"}`}>
                                         {source.name}
                                     </span>
-                                    <p className="text-gray-400 text-sm mt-1">{source.description}</p>
-                                    <p className="text-gray-500 text-xs mt-1">{source.url}</p>
+                                    <p className="text-gray-500 text-xs truncate">{source.description.split(',')[0]}</p>
                                 </div>
                             </div>
                         </button>
@@ -638,7 +676,7 @@ export default function PriceCrawler() {
                                                     className="rounded border-gray-600"
                                                 />
                                                 <span className="text-white flex-1 text-sm">{category.name}</span>
-                                                {category.productCount && (
+                                                {'productCount' in category && category.productCount && (
                                                     <span className="text-gray-400 text-xs">{category.productCount}</span>
                                                 )}
                                             </label>
@@ -731,9 +769,11 @@ export default function PriceCrawler() {
                                                         ? 'bg-purple-500/20 text-purple-400'
                                                         : product.source === 'ianmall'
                                                             ? 'bg-orange-500/20 text-orange-400'
-                                                            : 'bg-blue-500/20 text-blue-400'
+                                                            : product.source === 'symembership'
+                                                                ? 'bg-cyan-500/20 text-cyan-400'
+                                                                : 'bg-blue-500/20 text-blue-400'
                                                     }`}>
-                                                    {product.source === 'ohouse' ? '오하우스' : product.source === 'hangel' ? '한글중문' : product.source === 'ianmall' ? '이안몰' : '자재로'}
+                                                    {product.source === 'ohouse' ? '오하우스' : product.source === 'hangel' ? '한글중문' : product.source === 'ianmall' ? '이안몰' : product.source === 'symembership' ? '에스와이' : '자재로'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">

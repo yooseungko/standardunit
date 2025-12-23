@@ -91,6 +91,35 @@ export default function QuotePrintPage() {
         );
     }
 
+    // 카테고리 순서 정의
+    const CATEGORY_ORDER: Record<string, number> = {
+        '인건비': 1,
+        '가설': 2,
+        '철거': 3,
+        '확장': 4,
+        '샷시': 5,
+        '창호': 5,
+        '설비': 6,
+        '에어컨': 7,
+        '목공': 8,
+        '목자재': 9,
+        '도어': 10,
+        '목문': 10,
+        '전기': 11,
+        '타일': 12,
+        '바닥': 13,
+        '도배': 14,
+        '벽면': 14,
+        '필름': 15,
+        '욕실': 16,
+        '중문': 17,
+        '주방': 18,
+        '가구': 19,
+        '마감': 20,
+        '청소': 21,
+        '기타': 99,
+    };
+
     // 카테고리별 그룹핑
     const itemsByCategory: Record<string, QuoteItem[]> = {};
     quote.items?.forEach((item) => {
@@ -99,6 +128,14 @@ export default function QuotePrintPage() {
             itemsByCategory[item.category] = [];
         }
         itemsByCategory[item.category].push(item);
+    });
+
+    // 카테고리 순서대로 정렬
+    const sortedCategories = Object.keys(itemsByCategory).sort((a, b) => {
+        const orderA = CATEGORY_ORDER[a] || 50;
+        const orderB = CATEGORY_ORDER[b] || 50;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.localeCompare(b);
     });
 
     const today = new Date().toLocaleDateString('ko-KR');
@@ -198,7 +235,8 @@ export default function QuotePrintPage() {
                 <div className="mb-6">
                     <h2 className="text-sm font-bold border-b border-gray-300 pb-2 mb-3">상세 견적 내역</h2>
 
-                    {Object.entries(itemsByCategory).map(([category, items]) => {
+                    {sortedCategories.map((category) => {
+                        const items = itemsByCategory[category];
                         const categoryTotal = items.reduce((sum, item) => sum + item.total_price, 0);
                         return (
                             <div key={category} className="mb-4">

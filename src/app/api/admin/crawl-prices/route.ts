@@ -1,5 +1,5 @@
 // 통합 가격 크롤러 API
-// 여러 소스(오하우스, 자재로, 한글중문, 이안몰 등)에서 제품 정보를 크롤링합니다.
+// 여러 소스(오하우스, 자재로, 한글중문, 이안몰, 에스와이 등)에서 제품 정보를 크롤링합니다.
 
 import { NextRequest } from 'next/server';
 import {
@@ -10,6 +10,7 @@ import {
     zzroCrawler,
     hangelCrawler,
     ianmallCrawler,
+    symembershipCrawler,
     CrawlProgress,
 } from '@/lib/crawlers';
 
@@ -24,10 +25,10 @@ export async function POST(request: NextRequest) {
                 const { source, categoryIds } = body;
 
                 // 소스 검증
-                if (!source || !['ohouse', 'zzro', 'hangel', 'ianmall'].includes(source)) {
+                if (!source || !['ohouse', 'zzro', 'hangel', 'ianmall', 'symembership'].includes(source)) {
                     controller.enqueue(encoder.encode(JSON.stringify({
                         type: 'error',
-                        message: '크롤링 소스를 선택해주세요. (ohouse, zzro, hangel, ianmall)',
+                        message: '크롤링 소스를 선택해주세요. (ohouse, zzro, hangel, ianmall, symembership)',
                     }) + '\n'));
                     controller.close();
                     return;
@@ -67,6 +68,13 @@ export async function POST(request: NextRequest) {
                 } else if (source === 'ianmall') {
                     // 이안몰 크롤링
                     const generator = ianmallCrawler.crawlAll(categoryIds);
+
+                    for await (const progress of generator) {
+                        controller.enqueue(encoder.encode(JSON.stringify(progress) + '\n'));
+                    }
+                } else if (source === 'symembership') {
+                    // 에스와이 크롤링
+                    const generator = symembershipCrawler.crawlAll(categoryIds);
 
                     for await (const progress of generator) {
                         controller.enqueue(encoder.encode(JSON.stringify(progress) + '\n'));

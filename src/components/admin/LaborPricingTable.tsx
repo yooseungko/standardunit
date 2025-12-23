@@ -16,10 +16,34 @@ export default function LaborPricingTable({ data, onEdit, onDelete, searchQuery 
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-    // 카테고리 목록 추출
+    // 카테고리(직종) 순서 정의
+    const CATEGORY_ORDER: Record<string, number> = {
+        '철거': 1,
+        '가설': 2,
+        '설비': 3,
+        '에어컨': 4,
+        '목공': 5,
+        '전기': 6,
+        '타일': 7,
+        '바닥': 8,
+        '도배': 9,
+        '필름': 10,
+        '욕실': 11,
+        '중문': 12,
+        '주방': 13,
+        '가구': 14,
+        '마감': 15,
+    };
+
+    // 카테고리 목록 추출 (순서대로 정렬)
     const categories = useMemo(() => {
         const cats = [...new Set(data.map(l => l.labor_type).filter(Boolean))];
-        return cats.sort();
+        return cats.sort((a, b) => {
+            const orderA = CATEGORY_ORDER[a] || 50;
+            const orderB = CATEGORY_ORDER[b] || 50;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.localeCompare(b);
+        });
     }, [data]);
 
     // 필터링된 데이터 (검색 + 카테고리)
