@@ -447,13 +447,13 @@ export default function StyleboardPage({ params }: { params: Promise<{ id: strin
                                             }`} />
                                     </div>
 
-                                    {/* 확대 버튼 */}
+                                    {/* 확대 버튼 - 항상 희미하게 표시, 호버 시 진하게 */}
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setEnlargedImage(image.file_path);
                                         }}
-                                        className="absolute bottom-2 right-2 w-8 h-8 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute bottom-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white/60 opacity-60 hover:opacity-100 hover:text-white hover:bg-black/70 transition-all"
                                     >
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
