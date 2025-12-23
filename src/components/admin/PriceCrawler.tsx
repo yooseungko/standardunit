@@ -280,6 +280,12 @@ const HANGEL_CATEGORY_GROUPS: CategoryGroup[] = [
             },
         ]
     },
+    {
+        groupName: "필름",
+        categories: [
+            { id: 173, name: "예림 필름" },
+        ]
+    },
 ];
 
 

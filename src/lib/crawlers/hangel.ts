@@ -42,11 +42,15 @@ export const HANGEL_CATEGORIES: Record<number, CategoryInfo> = {
     1399: { name: '간살중문', parent: '중문' },
     1206: { name: '프레임리스 중문', parent: '중문' },
     691: { name: '중문+파티션', parent: '중문' },
+
+    // 필름 카테고리
+    173: { name: '예림 필름', parent: '필름' },
 };
 
 // 상위 카테고리 목록
 export const HANGEL_PARENT_CATEGORIES: Record<string, number[]> = {
     '중문': [84, 86, 1396, 1205, 1398, 1291, 1289, 1290, 89, 87, 1399, 1206, 691],
+    '필름': [173],
 };
 
 // HTML에서 제품 정보 추출
