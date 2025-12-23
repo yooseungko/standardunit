@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 스타일보드 링크 생성
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://standardunit.co.kr';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://standardunit.kr';
         const styleboardLink = `${baseUrl}/styleboard/${styleboardId}`;
 
         // 이메일 발송
