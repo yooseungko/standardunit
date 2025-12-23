@@ -39,9 +39,14 @@ export default function Footer() {
                 </div>
 
                 {/* Bottom */}
-                <div className="mt-16 pt-10 border-t border-gray-800 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm font-mono text-gray-500">
-                    <p>© 2024 Standard Unit. All rights reserved.</p>
-                    <p className="text-gray-600">데이터 기반 투명 견적</p>
+                <div className="mt-16 pt-10 border-t border-gray-800 flex flex-col gap-4 text-sm font-mono text-gray-500">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <p>© 2024 Standard Unit. All rights reserved.</p>
+                        <p className="text-gray-600">데이터 기반 투명 견적</p>
+                    </div>
+                    <div className="text-gray-600 text-xs">
+                        <p>테넷컴퍼니 | 대표자 고유진/고유승 | 사업자번호 654-11-02475</p>
+                    </div>
                 </div>
             </div>
         </footer>
