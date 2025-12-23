@@ -34,6 +34,9 @@ export default function StyleboardManagement() {
     const [creating, setCreating] = useState(false);
     const [sendingLink, setSendingLink] = useState(false);
 
+    // 탭 상태
+    const [activeTab, setActiveTab] = useState<'customers' | 'images'>('customers');
+
     // 데이터 로드
     useEffect(() => {
         fetchData();
@@ -223,253 +226,435 @@ export default function StyleboardManagement() {
     return (
         <div className="space-y-8">
             {/* 헤더 */}
-            <div>
-                <h2 className="text-2xl font-bold text-white">스타일보드 관리</h2>
-                <p className="text-gray-500 mt-1">고객에게 스타일보드 링크를 발송하고 선택 결과를 확인하세요.</p>
-            </div>
-
-            {/* 통계 카드 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
-                    <p className="font-mono text-3xl font-black text-white">{contactedEstimates.length}</p>
-                    <p className="text-sm text-gray-500 mt-1">연락 완료 고객</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold text-white">스타일보드 관리</h2>
+                    <p className="text-gray-500 mt-1">고객에게 스타일보드 링크를 발송하고 선택 결과를 확인하세요.</p>
                 </div>
-                <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
-                    <p className="font-mono text-3xl font-black text-blue-400">{styleboards.length}</p>
-                    <p className="text-sm text-gray-500 mt-1">스타일보드 생성됨</p>
-                </div>
-                <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
-                    <p className="font-mono text-3xl font-black text-purple-400">
-                        {styleboards.filter(sb => sb.link_sent).length}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">링크 발송됨</p>
-                </div>
-                <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
-                    <p className="font-mono text-3xl font-black text-emerald-400">
-                        {styleboards.filter(sb => sb.saved_at).length}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">스타일 선택 완료</p>
-                </div>
-            </div>
-
-            {/* 연락 완료 고객 목록 테이블 */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden">
-                <div className="p-4 border-b border-white/10">
-                    <h3 className="font-semibold text-white">연락 완료 고객 목록</h3>
-                    <p className="text-xs text-gray-500 mt-1">스타일보드 미생성 고객은 비밀번호를 입력하여 바로 생성할 수 있습니다.</p>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-white/5 border-b border-white/10">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">고객명</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">단지명</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">연락처</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">비밀번호</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">상태</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">작업</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/10">
-                            {contactedEstimates.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        연락 완료된 고객이 없습니다.
-                                    </td>
-                                </tr>
-                            ) : (
-                                contactedEstimates.map((estimate) => {
-                                    const styleboard = styleboards.find(sb => sb.estimate_id === estimate.id);
-                                    const hasStyleboard = !!styleboard;
-
-                                    // 2단계 구조 선택 개수 계산
-                                    const selectedCount = styleboard
-                                        ? Object.values(styleboard.selected_images || {}).reduce(
-                                            (spaceAcc, subCategories) => {
-                                                if (typeof subCategories === 'object' && subCategories !== null) {
-                                                    return spaceAcc + Object.values(subCategories).reduce(
-                                                        (subAcc, arr) => subAcc + (Array.isArray(arr) ? arr.length : 0), 0
-                                                    );
-                                                }
-                                                return spaceAcc;
-                                            }, 0
-                                        )
-                                        : 0;
-
-                                    return (
-                                        <CustomerRow
-                                            key={estimate.id}
-                                            estimate={estimate}
-                                            styleboard={styleboard}
-                                            selectedCount={selectedCount}
-                                            onCreateStyleboard={async (password: string) => {
-                                                try {
-                                                    setCreating(true);
-                                                    const response = await fetch('/api/styleboard', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            estimate_id: estimate.id,
-                                                            customer_name: estimate.name,
-                                                            customer_phone: estimate.phone,
-                                                            customer_email: estimate.email,
-                                                            password,
-                                                        }),
-                                                    });
-                                                    const data = await response.json();
-                                                    if (!response.ok) {
-                                                        throw new Error(data.error || '스타일보드 생성에 실패했습니다.');
-                                                    }
-                                                    fetchData();
-                                                } catch (err) {
-                                                    alert(err instanceof Error ? err.message : '오류가 발생했습니다.');
-                                                } finally {
-                                                    setCreating(false);
-                                                }
-                                            }}
-                                            onSendLink={() => styleboard && sendStyleboardLink(styleboard)}
-                                            onViewDetail={() => {
-                                                if (styleboard) {
-                                                    setSelectedStyleboard(styleboard);
-                                                    setShowDetailModal(true);
-                                                }
-                                            }}
-                                            creating={creating}
-                                            sendingLink={sendingLink}
-                                        />
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                {/* 탭 버튼 */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setActiveTab('customers')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'customers'
+                            ? 'bg-white text-gray-900'
+                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                            }`}
+                    >
+                        고객 관리
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('images')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'images'
+                            ? 'bg-white text-gray-900'
+                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                            }`}
+                    >
+                        이미지 관리
+                    </button>
                 </div>
             </div>
 
-            {/* 스타일보드 생성 모달 */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl">
-                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">스타일보드 생성</h2>
-                            <button
-                                onClick={() => {
-                                    setShowCreateModal(false);
-                                    setNewPassword("");
-                                    setSelectedEstimate(null);
-                                }}
-                                className="text-gray-500 hover:text-white transition-colors"
-                            >
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+            {activeTab === 'customers' ? (
+                <>
+                    {/* 통계 카드 */}
+
+                    {/* 통계 카드 */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                            <p className="font-mono text-3xl font-black text-white">{contactedEstimates.length}</p>
+                            <p className="text-sm text-gray-500 mt-1">연락 완료 고객</p>
                         </div>
-
-                        <div className="p-6 space-y-6">
-                            {/* 고객 선택 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    고객 선택 (연락 완료 상태)
-                                </label>
-                                <select
-                                    value={selectedEstimate?.id || ""}
-                                    onChange={(e) => {
-                                        const estimate = estimatesWithoutStyleboard.find(
-                                            est => est.id === parseInt(e.target.value)
-                                        );
-                                        setSelectedEstimate(estimate || null);
-                                    }}
-                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
-                                >
-                                    <option value="">고객을 선택하세요</option>
-                                    {estimatesWithoutStyleboard.map((estimate) => (
-                                        <option key={estimate.id} value={estimate.id}>
-                                            {estimate.name} - {estimate.complex_name} ({estimate.phone})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* 선택된 고객 정보 */}
-                            {selectedEstimate && (
-                                <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">고객명</span>
-                                        <span className="text-white">{selectedEstimate.name}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">단지명</span>
-                                        <span className="text-white">{selectedEstimate.complex_name}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">연락처</span>
-                                        <span className="text-white font-mono">{selectedEstimate.phone}</span>
-                                    </div>
-                                    {selectedEstimate.email && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-gray-500">이메일</span>
-                                            <span className="text-white">{selectedEstimate.email}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* 비밀번호 입력 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    스타일보드 접근 비밀번호
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="고객에게 전달할 비밀번호 (예: 1234)"
-                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder-gray-500"
-                                />
-                                <p className="text-xs text-gray-500 mt-2">
-                                    * 고객이 스타일보드에 접근할 때 사용할 비밀번호입니다.
-                                </p>
-                            </div>
+                        <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                            <p className="font-mono text-3xl font-black text-blue-400">{styleboards.length}</p>
+                            <p className="text-sm text-gray-500 mt-1">스타일보드 생성됨</p>
                         </div>
-
-                        <div className="p-6 border-t border-white/10 flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowCreateModal(false);
-                                    setNewPassword("");
-                                    setSelectedEstimate(null);
-                                }}
-                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                            >
-                                취소
-                            </button>
-                            <button
-                                onClick={handleCreateStyleboard}
-                                disabled={!selectedEstimate || !newPassword || creating}
-                                className={`px-6 py-2 rounded-lg font-medium transition-colors ${!selectedEstimate || !newPassword || creating
-                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                    : 'bg-white text-gray-900 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {creating ? '생성 중...' : '스타일보드 생성'}
-                            </button>
+                        <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                            <p className="font-mono text-3xl font-black text-purple-400">
+                                {styleboards.filter(sb => sb.link_sent).length}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">링크 발송됨</p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                            <p className="font-mono text-3xl font-black text-emerald-400">
+                                {styleboards.filter(sb => sb.saved_at).length}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">스타일 선택 완료</p>
                         </div>
                     </div>
-                </div>
-            )}
 
-            {/* 스타일보드 상세 모달 */}
-            {showDetailModal && selectedStyleboard && (
-                <StyleboardDetailModal
-                    styleboard={selectedStyleboard}
-                    onClose={() => {
-                        setShowDetailModal(false);
-                        setSelectedStyleboard(null);
-                    }}
-                    onDelete={() => handleDeleteStyleboard(selectedStyleboard.id)}
-                    onRefresh={fetchData}
-                />
+                    {/* 연락 완료 고객 목록 테이블 */}
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden">
+                        <div className="p-4 border-b border-white/10">
+                            <h3 className="font-semibold text-white">연락 완료 고객 목록</h3>
+                            <p className="text-xs text-gray-500 mt-1">스타일보드 미생성 고객은 비밀번호를 입력하여 바로 생성할 수 있습니다.</p>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-white/5 border-b border-white/10">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">고객명</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">단지명</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">연락처</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">비밀번호</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">상태</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/10">
+                                    {contactedEstimates.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                                연락 완료된 고객이 없습니다.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        contactedEstimates.map((estimate) => {
+                                            const styleboard = styleboards.find(sb => sb.estimate_id === estimate.id);
+                                            const hasStyleboard = !!styleboard;
+
+                                            // 2단계 구조 선택 개수 계산
+                                            const selectedCount = styleboard
+                                                ? Object.values(styleboard.selected_images || {}).reduce(
+                                                    (spaceAcc, subCategories) => {
+                                                        if (typeof subCategories === 'object' && subCategories !== null) {
+                                                            return spaceAcc + Object.values(subCategories).reduce(
+                                                                (subAcc, arr) => subAcc + (Array.isArray(arr) ? arr.length : 0), 0
+                                                            );
+                                                        }
+                                                        return spaceAcc;
+                                                    }, 0
+                                                )
+                                                : 0;
+
+                                            return (
+                                                <CustomerRow
+                                                    key={estimate.id}
+                                                    estimate={estimate}
+                                                    styleboard={styleboard}
+                                                    selectedCount={selectedCount}
+                                                    onCreateStyleboard={async (password: string) => {
+                                                        try {
+                                                            setCreating(true);
+                                                            const response = await fetch('/api/styleboard', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({
+                                                                    estimate_id: estimate.id,
+                                                                    customer_name: estimate.name,
+                                                                    customer_phone: estimate.phone,
+                                                                    customer_email: estimate.email,
+                                                                    password,
+                                                                }),
+                                                            });
+                                                            const data = await response.json();
+                                                            if (!response.ok) {
+                                                                throw new Error(data.error || '스타일보드 생성에 실패했습니다.');
+                                                            }
+                                                            fetchData();
+                                                        } catch (err) {
+                                                            alert(err instanceof Error ? err.message : '오류가 발생했습니다.');
+                                                        } finally {
+                                                            setCreating(false);
+                                                        }
+                                                    }}
+                                                    onSendLink={() => styleboard && sendStyleboardLink(styleboard)}
+                                                    onViewDetail={() => {
+                                                        if (styleboard) {
+                                                            setSelectedStyleboard(styleboard);
+                                                            setShowDetailModal(true);
+                                                        }
+                                                    }}
+                                                    creating={creating}
+                                                    sendingLink={sendingLink}
+                                                />
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* 스타일보드 생성 모달 */}
+                    {showCreateModal && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                            <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl">
+                                <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                                    <h2 className="text-xl font-bold text-white">스타일보드 생성</h2>
+                                    <button
+                                        onClick={() => {
+                                            setShowCreateModal(false);
+                                            setNewPassword("");
+                                            setSelectedEstimate(null);
+                                        }}
+                                        className="text-gray-500 hover:text-white transition-colors"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className="p-6 space-y-6">
+                                    {/* 고객 선택 */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                            고객 선택 (연락 완료 상태)
+                                        </label>
+                                        <select
+                                            value={selectedEstimate?.id || ""}
+                                            onChange={(e) => {
+                                                const estimate = estimatesWithoutStyleboard.find(
+                                                    est => est.id === parseInt(e.target.value)
+                                                );
+                                                setSelectedEstimate(estimate || null);
+                                            }}
+                                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
+                                        >
+                                            <option value="">고객을 선택하세요</option>
+                                            {estimatesWithoutStyleboard.map((estimate) => (
+                                                <option key={estimate.id} value={estimate.id}>
+                                                    {estimate.name} - {estimate.complex_name} ({estimate.phone})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* 선택된 고객 정보 */}
+                                    {selectedEstimate && (
+                                        <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">고객명</span>
+                                                <span className="text-white">{selectedEstimate.name}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">단지명</span>
+                                                <span className="text-white">{selectedEstimate.complex_name}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">연락처</span>
+                                                <span className="text-white font-mono">{selectedEstimate.phone}</span>
+                                            </div>
+                                            {selectedEstimate.email && (
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-500">이메일</span>
+                                                    <span className="text-white">{selectedEstimate.email}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* 비밀번호 입력 */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                            스타일보드 접근 비밀번호
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            placeholder="고객에게 전달할 비밀번호 (예: 1234)"
+                                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder-gray-500"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            * 고객이 스타일보드에 접근할 때 사용할 비밀번호입니다.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 border-t border-white/10 flex justify-end gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setShowCreateModal(false);
+                                            setNewPassword("");
+                                            setSelectedEstimate(null);
+                                        }}
+                                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        onClick={handleCreateStyleboard}
+                                        disabled={!selectedEstimate || !newPassword || creating}
+                                        className={`px-6 py-2 rounded-lg font-medium transition-colors ${!selectedEstimate || !newPassword || creating
+                                            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                            : 'bg-white text-gray-900 hover:bg-gray-200'
+                                            }`}
+                                    >
+                                        {creating ? '생성 중...' : '스타일보드 생성'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 스타일보드 상세 모달 */}
+                    {showDetailModal && selectedStyleboard && (
+                        <StyleboardDetailModal
+                            styleboard={selectedStyleboard}
+                            onClose={() => {
+                                setShowDetailModal(false);
+                                setSelectedStyleboard(null);
+                            }}
+                            onDelete={() => handleDeleteStyleboard(selectedStyleboard.id)}
+                            onRefresh={fetchData}
+                        />
+                    )}
+                </>
+            ) : (
+                <ImageManagementTab />
             )}
+        </div>
+    );
+}
+
+// 이미지 관리 탭 컴포넌트
+function ImageManagementTab() {
+    const [uploading, setUploading] = useState(false);
+    const [selectedSpace, setSelectedSpace] = useState<SpaceCategory>('living');
+    const [selectedSubCategory, setSelectedSubCategory] = useState('');
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [file, setFile] = useState<File | null>(null);
+
+    // 공간별 서브카테고리
+    const subCategories: Record<SpaceCategory, string[]> = {
+        living: ['가구', '조명', '월아트', '톤앤매너'],
+        kitchen: ['싱크대', '상부장', '타일', '톤앤매너'],
+        bedroom: ['가구', '조명', '월아트', '톤앤매너'],
+        bathroom: ['세면대', '타일', '욕조', '톤앤매너'],
+        entrance: ['중문', '신발장', '톤앤매너'],
+        study: ['책상', '수납', '조명', '톤앤매너'],
+        kids: ['가구', '수납', '월아트', '톤앤매너'],
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) {
+            setFile(selectedFile);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!file || !selectedSpace || !selectedSubCategory) {
+            alert('이미지, 공간, 서브 카테고리를 모두 선택해주세요.');
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('space', selectedSpace);
+            formData.append('subCategory', selectedSubCategory);
+
+            const response = await fetch('/api/styleboard/images/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert('이미지가 업로드되었습니다!\n경로: ' + data.filePath);
+                setFile(null);
+                setImagePreview(null);
+            } else {
+                alert('업로드 실패: ' + data.error);
+            }
+        } catch (err) {
+            alert('업로드 중 오류가 발생했습니다.');
+            console.error(err);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* 업로드 폼 */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">이미지 업로드</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    {/* 공간 선택 */}
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-2">공간</label>
+                        <select
+                            value={selectedSpace}
+                            onChange={(e) => {
+                                setSelectedSpace(e.target.value as SpaceCategory);
+                                setSelectedSubCategory('');
+                            }}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white"
+                        >
+                            {Object.entries(spaceCategoryLabels).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* 서브 카테고리 선택 */}
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-2">카테고리</label>
+                        <select
+                            value={selectedSubCategory}
+                            onChange={(e) => setSelectedSubCategory(e.target.value)}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white"
+                        >
+                            <option value="">선택...</option>
+                            {subCategories[selectedSpace]?.map((sub) => (
+                                <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* 파일 선택 */}
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-2">파일</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-purple-500 file:text-white"
+                        />
+                    </div>
+                </div>
+
+                {/* 미리보기 */}
+                {imagePreview && (
+                    <div className="mb-4">
+                        <p className="text-sm text-gray-400 mb-2">미리보기</p>
+                        <div className="w-32 h-32 rounded-lg overflow-hidden border border-white/10">
+                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                    </div>
+                )}
+
+                {/* 업로드 버튼 */}
+                <button
+                    onClick={handleUpload}
+                    disabled={uploading || !file || !selectedSubCategory}
+                    className={`px-6 py-2 rounded-lg font-medium transition-colors ${uploading || !file || !selectedSubCategory
+                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        : 'bg-purple-500 text-white hover:bg-purple-600'
+                        }`}
+                >
+                    {uploading ? '업로드 중...' : '업로드'}
+                </button>
+            </div>
+
+            {/* 안내 */}
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <p className="text-blue-400 text-sm">
+                    💡 업로드한 이미지는 <code className="bg-blue-500/20 px-1 rounded">public/styleboard/[공간]/[카테고리]/</code> 폴더에 저장됩니다.
+                    <br />
+                    서버 재시작 없이 바로 스타일보드에서 사용할 수 있습니다.
+                </p>
+            </div>
         </div>
     );
 }
