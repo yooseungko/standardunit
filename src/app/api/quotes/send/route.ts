@@ -79,8 +79,32 @@ function generateAICommentHtml(comment: string | undefined): string {
     return html;
 }
 
-// 견적서 이메일 HTML 생성 (간소화 버전)
-function generateQuoteEmailHtml(quote: Quote & { items: QuoteItem[] }): string {
+// 견적서 이메일 HTML 생성 (스타일보드 포함)
+function generateQuoteEmailHtml(
+    quote: Quote & { items: QuoteItem[] },
+    styleboardLink?: string | null,
+    styleboardPassword?: string | null
+): string {
+    // 스타일보드 섹션 HTML
+    const styleboardSection = styleboardLink && styleboardPassword ? `
+            <!-- 스타일보드 안내 -->
+            <div style="margin-bottom: 30px; padding: 24px; background: linear-gradient(135deg, #f3e8ff 0%, #fce7f3 100%); border-radius: 12px; border: 1px solid #c084fc;">
+                <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #7c3aed; font-weight: 700;">🎨 스타일보드 안내</h3>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b21a8; line-height: 1.7;">
+                    ${quote.customer_name || '고객'}님의 공간 스타일을 선택해주세요!<br>
+                    마음에 드는 인테리어 이미지를 선택하시면 맞춤 상담을 진행해 드립니다.
+                </p>
+                <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">접속 비밀번호</p>
+                    <p style="margin: 0; font-size: 24px; font-weight: 700; color: #7c3aed; font-family: monospace; letter-spacing: 4px;">${styleboardPassword}</p>
+                </div>
+                <a href="${styleboardLink}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 25px; font-size: 14px; font-weight: 600;">
+                    🏠 내 취향 찾기
+                </a>
+            </div>
+    ` : '';
+
     return `
 <!DOCTYPE html>
 <html>
@@ -151,6 +175,8 @@ function generateQuoteEmailHtml(quote: Quote & { items: QuoteItem[] }): string {
                 </p>
             </div>
 
+            ${styleboardSection}
+
             <!-- 프로모션 혜택 -->
             <div style="padding: 24px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; border: 1px solid #f59e0b;">
                 <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #92400e; font-weight: 700;">🎁 특별 혜택 안내</h3>
@@ -213,8 +239,56 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 이메일 발송
-        const emailHtml = generateQuoteEmailHtml(quote as Quote & { items: QuoteItem[] });
+        // 스타일보드 자동 생성 (없으면)
+        let styleboardId = null;
+        let styleboardPassword = null;
+
+        if (quote.estimate_id) {
+            // 기존 스타일보드 확인
+            const { data: existingStyleboard } = await supabase
+                .from('customer_styleboards')
+                .select('id, password')
+                .eq('estimate_id', quote.estimate_id)
+                .single();
+
+            if (existingStyleboard) {
+                styleboardId = existingStyleboard.id;
+                styleboardPassword = existingStyleboard.password;
+            } else {
+                // 스타일보드 자동 생성 (4자리 랜덤 비밀번호)
+                styleboardPassword = Math.floor(1000 + Math.random() * 9000).toString();
+
+                const { data: newStyleboard, error: createError } = await supabase
+                    .from('customer_styleboards')
+                    .insert({
+                        estimate_id: quote.estimate_id,
+                        customer_name: toName,
+                        customer_phone: quote.customer_phone || '',
+                        customer_email: toEmail,
+                        password: styleboardPassword,
+                        link_sent: true,
+                        link_sent_at: new Date().toISOString(),
+                    })
+                    .select()
+                    .single();
+
+                if (!createError && newStyleboard) {
+                    styleboardId = newStyleboard.id;
+                    console.log('스타일보드 자동 생성:', styleboardId);
+                }
+            }
+        }
+
+        // 스타일보드 링크 생성
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://standardunit.kr';
+        const styleboardLink = styleboardId ? `${baseUrl}/styleboard/${styleboardId}` : null;
+
+        // 이메일 발송 (스타일보드 정보 포함)
+        const emailHtml = generateQuoteEmailHtml(
+            quote as Quote & { items: QuoteItem[] },
+            styleboardLink,
+            styleboardPassword
+        );
 
         const { data: emailData, error: emailError } = await resend.emails.send({
             // 인증된 도메인 이메일 사용

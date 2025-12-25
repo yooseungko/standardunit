@@ -14,6 +14,7 @@ import Calculator from "@/components/ui/Calculator";
 import ScopeSection from "@/components/sections/ScopeSection";
 import EstimateShare from "@/components/sections/EstimateShare";
 import PartnerMatch from "@/components/sections/PartnerMatch";
+import PortfolioShowcase from "@/components/sections/PortfolioShowcase";
 import FinalCTA from "@/components/sections/FinalCTA";
 
 export default function Home() {
@@ -53,6 +54,9 @@ export default function Home() {
 
         {/* Partner Matching Section */}
         <PartnerMatch />
+
+        {/* Portfolio Showcase - 시공 포트폴리오 */}
+        <PortfolioShowcase />
 
         {/* Real-time Ticker */}
         <GeekTicker />
