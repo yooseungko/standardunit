@@ -370,10 +370,11 @@ export default function FinalCTA() {
                                 </div>
                                 <div>
                                     <p className="font-bold text-lg group-hover:text-black transition-colors">
-                                        견적 확인 후 시공도 의뢰하고 싶어요
+                                        계약 견적가 보장 시공의뢰
                                     </p>
                                     <p className="text-gray-500 text-sm mt-1">
-                                        검증된 파트너 시공사를 매칭해드립니다. 가격 보장 계약으로 추가 비용 걱정 없이 진행하세요.
+                                        스탠다드 유닛은 추가비 없는 인테리어 문화를 만듭니다.<br />
+                                        자연재해에 따른 추가 시공비를 제외하고 추가비의 200%를 보장.
                                     </p>
                                 </div>
                             </label>
