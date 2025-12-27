@@ -26,6 +26,7 @@ export interface EstimateRequest {
     created_at?: string;
     notes?: string | null;
     construction_scope?: string[];
+    preferred_construction_date?: string | null;
 }
 
 // ============================================

@@ -40,6 +40,7 @@ export default function FinalCTA() {
         wantsConstruction: false,
         constructionScope: defaultCheckedItems,
         additionalNotes: "",
+        preferredConstructionDate: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -308,6 +309,46 @@ export default function FinalCTA() {
                             <p className="text-xs text-gray-400 mt-4">
                                 선택된 항목: {formData.constructionScope.length}개
                             </p>
+                        </div>
+
+                        {/* 원하시는 시공일 */}
+                        <div className="mb-10 pt-8 border-t border-gray-100">
+                            <h3 className="font-mono text-sm text-gray-400 mb-4 tracking-widest uppercase">
+                                원하시는 시공일
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                                시공 시작을 희망하시는 시기를 선택해주세요.
+                            </p>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { value: 'within_1_month', label: '1개월 내' },
+                                    { value: 'within_2_months', label: '2개월 내' },
+                                    { value: 'within_3_months', label: '3개월 내' },
+                                ].map((option) => (
+                                    <label
+                                        key={option.value}
+                                        className={`flex items-center justify-center px-4 py-3 border cursor-pointer transition-all text-sm font-medium ${formData.preferredConstructionDate === option.value
+                                            ? 'border-black bg-black text-white'
+                                            : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="preferredConstructionDate"
+                                            value={option.value}
+                                            checked={formData.preferredConstructionDate === option.value}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, preferredConstructionDate: e.target.value }))}
+                                            className="sr-only"
+                                        />
+                                        {formData.preferredConstructionDate === option.value && (
+                                            <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        )}
+                                        <span>{option.label}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
 
                         {/* 시공 의뢰 옵션 */}

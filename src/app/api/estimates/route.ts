@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        const { complexName, size, floorType, name, phone, email, wantsConstruction, constructionScope, additionalNotes } = body;
+        const { complexName, size, floorType, name, phone, email, wantsConstruction, constructionScope, additionalNotes, preferredConstructionDate } = body;
 
         // 필수 필드 검증
         if (!complexName || !size || !name || !phone || !email) {
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
             created_at: new Date().toISOString(),
             notes: additionalNotes || null,
             construction_scope: constructionScope || [],
+            preferred_construction_date: preferredConstructionDate || null,
         };
 
         // Supabase가 설정된 경우
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
                     status: 'pending',
                     construction_scope: constructionScope || [],
                     notes: additionalNotes || null,
+                    preferred_construction_date: preferredConstructionDate || null,
                 }])
                 .select();
 

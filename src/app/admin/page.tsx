@@ -27,6 +27,7 @@ interface EstimateRequest {
     created_at: string;
     notes: string | null;
     construction_scope?: string[];
+    preferred_construction_date?: string | null;
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -648,6 +649,25 @@ export default function AdminPage() {
                                                     ) : (
                                                         <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-700 text-gray-400 rounded-full">
                                                             견적만
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500">원하시는 시공일</span>
+                                                    {selectedEstimate.preferred_construction_date ? (
+                                                        <span className="inline-block px-3 py-1 text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full">
+                                                            {(() => {
+                                                                const dateLabels: Record<string, string> = {
+                                                                    'within_1_month': '1개월 내',
+                                                                    'within_2_months': '2개월 내',
+                                                                    'within_3_months': '3개월 내',
+                                                                };
+                                                                return dateLabels[selectedEstimate.preferred_construction_date!] || selectedEstimate.preferred_construction_date;
+                                                            })()}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-700 text-gray-400 rounded-full">
+                                                            미선택
                                                         </span>
                                                     )}
                                                 </div>
