@@ -31,7 +31,7 @@ export default function Solution() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.3 }}
                     className="text-center mb-16 md:mb-24"
                 >
                     <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight">
@@ -47,7 +47,7 @@ export default function Solution() {
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-50px" }}
-                            transition={{ duration: 0.5, delay: index * 0.15 }}
+                            transition={{ duration: 0.25, delay: index * 0.08 }}
                             className="bg-white p-8 md:p-10 lg:p-12 border-l-4 border-black relative"
                         >
                             {/* Background number */}
@@ -75,7 +75,7 @@ export default function Solution() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
+                    transition={{ duration: 0.3, delay: 0.15 }}
                     className="mt-24 md:mt-32 text-center space-y-5"
                 >
                     <p className="text-xl md:text-2xl lg:text-3xl font-mono tracking-tight">

@@ -27,6 +27,39 @@ export interface EstimateRequest {
     notes?: string | null;
     construction_scope?: string[];
     preferred_construction_date?: string | null;
+    detailed_form_status?: 'pending' | 'sent' | 'completed';
+    detailed_form_token?: string | null;
+}
+
+// 정밀 견적 폼 응답 인터페이스
+export interface DetailedEstimateForm {
+    id?: number;
+    estimate_id: number;
+    // A. 철거 범위
+    demolition_scope: string[];
+    // B. 목공 범위
+    woodwork_scope: string[];
+    // C. 설비 범위
+    plumbing_scope: string[];
+    // D. 확장 범위
+    extension_scope: string[];
+    // E. 마감재 선택
+    finishing_materials: string[];
+    // F. 욕실
+    bathroom_options: string[];
+    // G. 가구
+    furniture_options: {
+        type: string;
+        grade: string;
+        quantity: number;
+    }[];
+    // H. 시스템 에어컨
+    aircon_options: {
+        location: string;
+        quantity: number;
+    }[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 // ============================================

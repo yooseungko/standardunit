@@ -211,6 +211,125 @@ export async function sendAdminNotification(estimate: {
     }
 }
 
+// 정밀 견적 폼 요청 이메일 발송
+export async function sendDetailedFormEmail(data: {
+    customerName: string;
+    customerEmail: string;
+    complexName: string;
+    size: string;
+    formLink: string;
+}): Promise<{ success: boolean; error?: string }> {
+    console.log('sendDetailedFormEmail called for:', data.customerName);
+
+    if (!resend) {
+        console.log('Resend not configured, skipping detailed form email');
+        return { success: false, error: 'Email not configured' };
+    }
+
+    const sizeLabel = sizeLabels[data.size] || `${data.size}평`;
+
+    try {
+        const { error } = await resend.emails.send({
+            from: '스탠다드 유닛 <noreply@standardunit.kr>',
+            to: data.customerEmail,
+            subject: `[Standard Unit] ${data.customerName}님, 정밀 견적을 위한 추가 정보를 요청드립니다`,
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #ffffff; padding: 40px 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: #111111; border-radius: 16px; overflow: hidden; border: 1px solid #222; }
+        .header { background: #000000; padding: 32px; text-align: center; border-bottom: 1px solid #222; }
+        .logo { font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
+        .header p { margin: 8px 0 0; color: #888; font-size: 14px; }
+        .badge { display: inline-block; background: #3b82f6; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 16px; }
+        .content { padding: 32px; }
+        .greeting { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 16px; }
+        .description { color: #aaa; line-height: 1.8; margin-bottom: 24px; font-size: 15px; }
+        .highlight { background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 20px; border-radius: 12px; margin: 24px 0; }
+        .highlight p { color: #fff; margin: 0; font-size: 15px; line-height: 1.6; }
+        .highlight strong { font-size: 18px; }
+        .info-box { background: #1a1a1a; border-radius: 12px; padding: 20px; border: 1px solid #333; margin-bottom: 24px; }
+        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #888; font-size: 14px; }
+        .info-value { color: #fff; font-weight: 500; font-size: 14px; }
+        .cta-button { display: block; background: #fff; color: #000; padding: 18px 32px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px; text-align: center; margin: 24px 0; }
+        .time-note { background: #22c55e20; border: 1px solid #22c55e40; border-radius: 8px; padding: 16px; margin: 24px 0; }
+        .time-note p { color: #22c55e; margin: 0; font-size: 14px; text-align: center; }
+        .footer { background: #0d0d0d; padding: 24px; text-align: center; border-top: 1px solid #222; }
+        .footer p { margin: 0; color: #666; font-size: 12px; }
+        .footer a { color: #3b82f6; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Standard Unit</div>
+            <p>계약 견적가 보장 시공</p>
+            <span class="badge">📋 정밀 견적 요청</span>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">${data.customerName}님, 안녕하세요!</div>
+            <p class="description">
+                계약 견적 시공 보장 의뢰에 따른<br>
+                <strong>정밀 견적을 위한 추가 요청 사항</strong>을 보내드립니다.
+            </p>
+            
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">단지명</span>
+                    <span class="info-value">${data.complexName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">평형</span>
+                    <span class="info-value">${sizeLabel}</span>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <p><strong>💡 선택만 하시면 됩니다!</strong></p>
+                <p style="margin-top: 8px;">철거, 목공, 설비, 확장, 마감재, 욕실, 가구, 에어컨 등<br>원하시는 시공 범위를 선택해주세요.</p>
+            </div>
+
+            <div class="time-note">
+                <p>⏱️ <strong>약 5분</strong>이면 작성 완료!</p>
+            </div>
+            
+            <a href="${data.formLink}" class="cta-button">📝 정밀 견적 폼 작성하기</a>
+            
+            <p style="color: #888; font-size: 13px; line-height: 1.6; text-align: center;">
+                작성하신 내용을 바탕으로 정확한 견적서를 준비해드리겠습니다.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>문의사항이 있으시면 언제든 연락주세요.</p>
+            <p style="margin-top: 8px;"><a href="https://open.kakao.com/o/sLPdwe7h">카카오톡 상담하기</a></p>
+            <p style="margin-top: 16px; color: #444;">© Standard Unit</p>
+        </div>
+    </div>
+</body>
+</html>
+            `,
+        });
+
+        if (error) {
+            console.error('Detailed form email error:', error);
+            return { success: false, error: error.message };
+        }
+
+        console.log('Detailed form email sent successfully');
+        return { success: true };
+    } catch (error) {
+        console.error('Detailed form email error:', error);
+        return { success: false, error: String(error) };
+    }
+}
+
 // 스타일보드 링크 이메일 발송
 export async function sendStyleboardEmail(data: {
     customerName: string;

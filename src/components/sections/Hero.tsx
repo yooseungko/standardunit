@@ -25,7 +25,7 @@ export default function Hero() {
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                     className="text-center md:text-left"
                 >
                     {/* Main Headline */}
@@ -43,7 +43,7 @@ export default function Hero() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                        transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
                         className="max-w-2xl mx-auto md:mx-0 space-y-5"
                     >
                         <p className="text-lg md:text-xl lg:text-2xl text-gray-500 leading-relaxed tracking-tight">
@@ -58,7 +58,7 @@ export default function Hero() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+                        transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
                         className="mt-12 md:mt-14"
                     >
                         <a
@@ -76,7 +76,7 @@ export default function Hero() {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8, delay: 0.9, ease: "easeOut" }}
+                        transition={{ duration: 0.4, delay: 0.45, ease: "easeOut" }}
                         className="mt-16 md:mt-20 flex flex-wrap gap-10 md:gap-14 lg:gap-16 justify-center md:justify-start"
                     >
                         <div className="text-center md:text-left">
@@ -99,7 +99,7 @@ export default function Hero() {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.5, duration: 0.5 }}
+                transition={{ delay: 0.8, duration: 0.3 }}
                 className="absolute bottom-10 left-1/2 -translate-x-1/2"
             >
                 <motion.div

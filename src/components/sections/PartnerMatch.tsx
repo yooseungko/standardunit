@@ -34,7 +34,7 @@ export default function PartnerMatch() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.3 }}
                 >
                     {/* Header */}
                     <div className="mb-16 md:mb-24">
@@ -58,7 +58,7 @@ export default function PartnerMatch() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
+                        transition={{ duration: 0.25, delay: 0.1 }}
                         className="mb-16 md:mb-20"
                     >
                         <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
@@ -110,7 +110,7 @@ export default function PartnerMatch() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
+                        transition={{ duration: 0.25, delay: 0.15 }}
                         className="grid md:grid-cols-3 gap-6 md:gap-8 mb-16 md:mb-20"
                     >
                         {partnerBenefits.map((benefit, index) => (
@@ -134,7 +134,7 @@ export default function PartnerMatch() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.4 }}
+                        transition={{ duration: 0.25, delay: 0.2 }}
                         className="grid grid-cols-3 gap-4 md:gap-8"
                     >
                         {stats.map((stat, index) => (
@@ -154,7 +154,7 @@ export default function PartnerMatch() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.5 }}
+                        transition={{ duration: 0.25, delay: 0.25 }}
                         className="mt-16 md:mt-20 p-8 md:p-12 border-2 border-white text-center"
                     >
                         <p className="font-mono text-sm text-gray-400 mb-4 tracking-widest uppercase">

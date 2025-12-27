@@ -98,7 +98,7 @@ export default function FinalCTA() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5 }}
+                        transition={{ duration: 0.25 }}
                         className="bg-white p-12 md:p-16 border border-gray-200"
                     >
                         <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-8">
@@ -138,7 +138,7 @@ export default function FinalCTA() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.3 }}
                 >
                     {/* Headline */}
                     <div className="text-center mb-12 md:mb-16">
@@ -157,7 +157,7 @@ export default function FinalCTA() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
+                        transition={{ duration: 0.25, delay: 0.1 }}
                         onSubmit={handleSubmit}
                         className="bg-white p-8 md:p-12 border border-gray-200"
                     >
@@ -437,7 +437,7 @@ export default function FinalCTA() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.4 }}
+                        transition={{ duration: 0.25, delay: 0.2 }}
                         className="mt-12 grid md:grid-cols-3 gap-6 text-center"
                     >
                         <div className="p-6 bg-white border border-gray-200">

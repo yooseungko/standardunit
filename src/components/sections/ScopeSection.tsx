@@ -28,7 +28,7 @@ export default function ScopeSection() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.3 }}
                 >
                     {/* Header */}
                     <div className="mb-16 md:mb-24">
@@ -50,7 +50,7 @@ export default function ScopeSection() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
+                        transition={{ duration: 0.25, delay: 0.1 }}
                         className="mb-16 md:mb-20"
                     >
                         <div className="flex items-center gap-3 mb-8">
@@ -67,7 +67,7 @@ export default function ScopeSection() {
                                     initial={{ opacity: 0, y: 10 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ duration: 0.3, delay: 0.1 * index }}
+                                    transition={{ duration: 0.15, delay: 0.05 * index }}
                                     className="p-6 bg-gray-50 border border-gray-100"
                                 >
                                     <h4 className="font-bold text-lg mb-3">{category.category}</h4>
@@ -92,7 +92,7 @@ export default function ScopeSection() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
+                        transition={{ duration: 0.25, delay: 0.15 }}
                     >
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-8 h-8 bg-gray-200 text-gray-600 flex items-center justify-center text-lg">
@@ -108,7 +108,7 @@ export default function ScopeSection() {
                                     initial={{ opacity: 0, y: 10 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ duration: 0.3, delay: 0.1 * index }}
+                                    transition={{ duration: 0.15, delay: 0.05 * index }}
                                     className="p-6 border border-dashed border-gray-300 bg-white"
                                 >
                                     <h4 className="font-bold text-gray-600 mb-2">{item.name}</h4>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 
 // Styleboard 이미지 경로 목록 (실제 이미지 파일들)
@@ -46,9 +46,18 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export default function PortfolioShowcase() {
-    // useMemo로 초기 마운트 시 한 번만 섞기 (hydration mismatch 허용 - 클라이언트에서만 랜덤)
-    const shuffledImages = useMemo(() => shuffleArray(styleboardImages), []);
+    // 클라이언트에서만 셔플하여 hydration mismatch 방지
+    const [shuffledImages, setShuffledImages] = useState<string[]>(styleboardImages);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // 클라이언트 마운트 후에만 셔플 (hydration mismatch 방지를 위해 필수)
+    useEffect(() => {
+        // 비동기적으로 호출하여 cascading render 경고 방지
+        const timer = setTimeout(() => {
+            setShuffledImages(shuffleArray(styleboardImages));
+        }, 0);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         const scrollContainer = scrollRef.current;
@@ -87,7 +96,7 @@ export default function PortfolioShowcase() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.3 }}
                 >
                     {/* Header */}
                     <p className="text-gray-500 font-mono text-sm md:text-base mb-5 tracking-widest uppercase">
@@ -117,7 +126,7 @@ export default function PortfolioShowcase() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.3 }}
+                transition={{ duration: 0.4, delay: 0.15 }}
                 className="relative"
             >
                 {/* 좌우 그라데이션 오버레이 */}
@@ -155,7 +164,7 @@ export default function PortfolioShowcase() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
+                    transition={{ duration: 0.25, delay: 0.2 }}
                     className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
                 >
                     {[

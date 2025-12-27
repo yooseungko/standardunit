@@ -31,7 +31,7 @@ export default function ValueProps() {
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.6, delay: index * 0.1 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
                             className="grid md:grid-cols-12 gap-8 md:gap-12 items-start"
                         >
                             {/* Number */}

@@ -17,7 +17,7 @@ export default function Problem() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.3 }}
                 >
                     <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-400 mb-16 md:mb-20 tracking-tight leading-relaxed">
                         아파트 인테리어 견적을 받아보셨다면
@@ -31,7 +31,7 @@ export default function Problem() {
                                 initial={{ opacity: 0, x: -30 }}
                                 whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true, margin: "-50px" }}
-                                transition={{ duration: 0.5, delay: index * 0.1 }}
+                                transition={{ duration: 0.25, delay: index * 0.05 }}
                                 className="flex items-start gap-5 md:gap-7"
                             >
                                 <span className="flex-shrink-0 text-3xl md:text-4xl lg:text-5xl font-black text-black select-none leading-none mt-1">
@@ -49,7 +49,7 @@ export default function Problem() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-50px" }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
+                        transition={{ duration: 0.3, delay: 0.2 }}
                         className="mt-20 md:mt-28 pt-16 border-t border-gray-200"
                     >
                         <p className="text-2xl md:text-3xl lg:text-4xl font-black leading-snug tracking-tight">

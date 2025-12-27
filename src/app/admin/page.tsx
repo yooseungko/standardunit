@@ -10,9 +10,10 @@ import QuoteManagement from "@/components/admin/QuoteManagement";
 import PriceCrawler from "@/components/admin/PriceCrawler";
 import ContractManagement from "@/components/admin/ContractManagement";
 import StyleboardManagement from "@/components/admin/StyleboardManagement";
+import DetailedEstimateRequests from "@/components/admin/DetailedEstimateRequests";
 
 // 탭 타입
-type AdminTab = 'requests' | 'analysis' | 'pricing' | 'market-pricing' | 'quotes' | 'contracts' | 'styleboard' | 'crawler';
+type AdminTab = 'requests' | 'detailed-requests' | 'analysis' | 'pricing' | 'market-pricing' | 'quotes' | 'contracts' | 'styleboard' | 'crawler';
 
 interface EstimateRequest {
     id: number;
@@ -376,6 +377,15 @@ export default function AdminPage() {
                             📨 견적 요청
                         </button>
                         <button
+                            onClick={() => setActiveTab('detailed-requests')}
+                            className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'detailed-requests'
+                                ? 'border-white text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
+                                }`}
+                        >
+                            📋 견적 상세 요청
+                        </button>
+                        <button
                             onClick={() => setActiveTab('analysis')}
                             className={`py-4 font-medium border-b-2 transition-colors ${activeTab === 'analysis'
                                 ? 'border-white text-white'
@@ -459,7 +469,9 @@ export default function AdminPage() {
                 )}
 
                 {/* Tab Content */}
-                {activeTab === 'analysis' ? (
+                {activeTab === 'detailed-requests' ? (
+                    <DetailedEstimateRequests />
+                ) : activeTab === 'analysis' ? (
                     <EstimateAnalysis isDemoMode={isDemoMode} />
                 ) : activeTab === 'pricing' ? (
                     <PricingManagement isDemoMode={isDemoMode} />
